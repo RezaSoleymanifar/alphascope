@@ -1,13 +1,14 @@
 # Meta — agent operating system
 
-Four files that govern how the agent self-improves:
+Five files that govern how the agent self-improves:
 
 ```
 meta/
 ├── north_star.md   IMMUTABLE — the goal. Human-PR only.
 ├── actor.md        MUTABLE — current pipeline policy. Actor edits, must align with north_star.
 ├── critique.md     MUTABLE — how to evaluate the actor. Edited only by learn.md proposals.
-└── learn.md        IMMUTABLE — meta-meta loop that improves critique. Human-PR only.
+├── community.md    MUTABLE — crowdsourcing layer governing human-in-the-loop contributions.
+└── learn.md        IMMUTABLE — meta-meta loop that improves critique + community. Human-PR only.
 ```
 
 ## Loop
@@ -24,15 +25,17 @@ meta/
         │                                        │
         │ updates self                           │ feeds
         │ in response to                         ▼
-        │                                ┌──────────────┐
-        └──────────reads─────────────────│   critique   │ ← evaluates against north_star
-                                         └──────┬───────┘
-                                                │ aggregated by
-                                                ▼
-                                         ┌──────────────┐
-                                         │    learn     │ ← improves critique itself
-                                         └──────────────┘
-                                            (weekly, human-approved PRs)
+        │                            ┌─────────────────────┐
+        └────────reads───────────────│ critique  │ community │  ← parallel evidence
+                                     │           │   notes   │     sources
+                                     └────┬──────┴────┬──────┘
+                                          │ both       │
+                                          │ aggregated │
+                                          ▼ by         ▼
+                                       ┌──────────────────┐
+                                       │       learn      │ ← improves critique +
+                                       └──────────────────┘   community rules
+                                          (weekly, human-PR)
 ```
 
 ## Roles
@@ -40,18 +43,22 @@ meta/
 - **north_star.md** — defines the optimization objective + quality bar. Never changes without human approval.
 - **actor.md** — defines current pipeline policy + calibration. Self-edits in response to critique. All edits via git for auditability.
 - **critique.md** — defines how to grade actor's outputs. Updated by learn's proposals (human-approved).
-- **learn.md** — meta-meta: analyzes git history of actor + critique + outcome metrics, proposes critique improvements. Never self-modifies.
+- **community.md** — governs crowdsourced contributions (challenges, alternatives, annotations). Twitter-Community-Notes-style bipartisan agreement; reputation system; AI-driven scraper for external mentions.
+- **learn.md** — meta-meta: analyzes git history of actor + critique + outcome metrics + community signals, proposes improvements. Never self-modifies.
 
-## Why 4 layers
+## Why 5 layers
 
 | Layer | Mutability | Edited by | Defends against |
 |---|---|---|---|
 | north_star | immutable | human only | Goodhart on the objective itself |
 | actor | mutable | actor | Pipeline becomes static / can't improve |
 | critique | mutable | learn (proposed), human (approved) | Critique becomes biased / blind |
+| community | mutable | learn (proposed), human (approved) | AI critique drifts from real practitioners |
 | learn | immutable | human only | Self-improvement loop optimizes away from the goal |
 
 Each layer's mutability is one less than the layer below it. This prevents any layer from rewriting its own constitution.
+
+Critique and community are PARALLEL evidence sources (neither dominates) — both feed `learn` which arbitrates.
 
 ## Operational cadence
 

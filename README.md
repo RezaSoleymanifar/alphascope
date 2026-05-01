@@ -41,8 +41,20 @@ Each paper gets a public landing page with:
 | Reproducible code | Sometimes | Some | Always (auto-gen + open) |
 | Live re-runs | No | No | Continuously updated |
 | Methodology standardized | No | Partial | Yes (purged CV + DSR everywhere) |
-| Crowdsourced | No | No | Yes (paper submissions, votes) |
+| Crowdsourced | No | No | Yes (challenges, alts, votes) |
 | Tracks alpha decay | No | No | Yes (live re-run cadence) |
+
+## Vision: Central intelligence for quant finance
+
+AlphaScope combines three loops into one knowledge base:
+
+1. **Automated replication** — LLM reads paper, extracts spec, writes code, runs backtest
+2. **Meta-learning critique** — internal critic agent judges every result; actor self-improves; learn improves the critic
+3. **Crowdsourced verification** — community submits challenges, alternatives, annotations; Twitter-Community-Notes-style bipartisan agreement gates merges
+
+The result: one canonical, continuously-updated, executable, community-verified page per quant finance paper.
+
+Like Wikipedia for trading signals, with executable code + live backtests + bipartisan verification.
 
 ## Quick start (developer)
 
