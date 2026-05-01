@@ -82,8 +82,53 @@ uv run alpha-archive init                              # SQLite schema
 uv run alpha-archive install-fixtures                  # 326 ground-truth fixtures from OpenAP
 uv run alpha-archive poll arxiv                        # fetch new papers
 uv run alpha-archive triage --limit 20                 # LLM triage (free via Claude Code CLI)
-uv run alpha-archive replicate <paper_id> <pdf_url>    # end-to-end paper → verdict
+uv run alpha-archive replicate <paper_id> <pdf_url>    # end-to-end paper -> verdict
 ```
+
+## Autonomous self-improvement loop
+
+Per the meta governance in `meta/north_star.md` + `meta/actor.md` + `meta/critique.md` + `meta/learn.md`, the platform runs an end-to-end self-improvement cycle. One iteration:
+
+```
+poll -> triage -> replicate-on-tradable -> CRITIC grades reports
+                                       -> ACTOR proposes calibration tweaks
+                                       -> metrics logged to data/meta_runs/metrics.jsonl
+              (weekly)              -> LEARN aggregator analyzes attribution -> proposes critique.md edits
+```
+
+**Manual run (any cadence):**
+```bash
+uv run alpha-archive loop                    # one full iteration; proposals only (no auto-apply)
+uv run alpha-archive loop --learn            # also run weekly LEARN aggregator
+uv run alpha-archive loop --auto-apply       # apply actor proposals to meta/actor.md (still requires human commit)
+```
+
+**Per-stage CLI (for inspection / debugging):**
+```bash
+uv run alpha-archive critique                # grade all ReplicationReports -> data/critique_runs/
+uv run alpha-archive critique --paper-id X   # grade just one
+uv run alpha-archive actor-propose           # propose actor.md calibration changes
+uv run alpha-archive learn                   # run LEARN attribution -> data/learn_runs/
+```
+
+### Deployment options
+
+| Mode | When to use | Cost | LLM provider |
+|------|-------------|------|--------------|
+| **Local cron / Task Scheduler** | Solo dev, full Claude Code Max plan available | $0 | `claude_code` (CLI Max plan, free) |
+| **GitHub Actions** (`.github/workflows/autonomous_loop.yml`) | Hands-off, want public artifact trail | ~$0.04/paper | `anthropic` (requires `ANTHROPIC_API_KEY` secret) |
+
+**GitHub Actions cron is intentionally commented-out by default.** To enable scheduled runs:
+1. Add `ANTHROPIC_API_KEY` to repo Settings -> Secrets and variables -> Actions
+2. Uncomment the `schedule:` block in `.github/workflows/autonomous_loop.yml`
+3. Push the change
+
+Until enabled, the workflow remains manually-triggered via the Actions tab ("Run workflow" button on `autonomous-loop`).
+
+**Hard safety per `meta/learn.md`:**
+- Actor self-edits emit a markdown PROPOSAL by default; `--auto-apply` is opt-in.
+- Critique.md changes (LEARN's domain) ALWAYS go through human-reviewed PRs — no auto-merge ever.
+- Loop never modifies `meta/north_star.md` or `meta/learn.md` (immutable per spec).
 
 ## Architecture
 

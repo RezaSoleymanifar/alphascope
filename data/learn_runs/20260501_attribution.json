@@ -1,0 +1,9 @@
+{
+  "run_ts": "2026-05-01T20:22:59.492423+00:00",
+  "since_days": 90,
+  "actor_commits_analyzed": 3,
+  "critique_commits_analyzed": 1,
+  "metric_snapshots_available": 2,
+  "rule_attribution": [],
+  "summary": "ATTRIBUTION CHAIN BROKEN \u2014 no actor commits cited critiques."
+}

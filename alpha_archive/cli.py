@@ -171,5 +171,83 @@ def cmd_list(
     rprint(table)
 
 
+@app.command("critique")
+def cmd_critique(
+    paper_id: str = typer.Option(None, help="single paper id; default = all"),
+    model: str = typer.Option(None, help="LLM model alias (provider-specific)"),
+):
+    """Run the CRITIC agent on ReplicationReports -> data/critique_runs/."""
+    from pathlib import Path as _P
+    from .agent import critic
+    if paper_id:
+        report = critic.critique_report(_P("data/replications") / f"{paper_id}.json", model=model)
+        out = critic.write_critique(report)
+        rprint(f"[green]wrote[/green] {out}")
+        rprint(f"  alignment_score={report.north_star_alignment_score} "
+               f"L={report.asymmetric_loss:.3f} findings={len(report.findings)}")
+    else:
+        written = critic.critique_all(model=model)
+        rprint(f"[green]critiqued {len(written)} reports[/green]")
+        for p in written[-5:]:
+            rprint(f"  {p}")
+
+
+@app.command("actor-propose")
+def cmd_actor_propose(
+    apply_changes: bool = typer.Option(False, "--apply",
+        help="apply proposed changes to meta/actor.md (default: propose only)"),
+    critique_limit: int = typer.Option(20, help="max recent critiques to consider"),
+):
+    """Generate actor.md calibration proposal from recent CRITIC findings."""
+    from .agent import actor_self_edit
+    proposal = actor_self_edit.propose(critique_limit=critique_limit)
+    out = actor_self_edit.write_proposal(proposal)
+    rprint(f"[green]proposal written[/green] {out}")
+    n = len(proposal.get("proposed_changes", []))
+    rprint(f"  {n} changes proposed")
+    if apply_changes and n > 0:
+        applied = actor_self_edit.apply_proposal(proposal)
+        if applied:
+            rprint("[yellow]applied to meta/actor.md — review + commit manually[/yellow]")
+        else:
+            rprint("[red]apply failed[/red]")
+
+
+@app.command("learn")
+def cmd_learn(
+    since_days: int = typer.Option(90, help="window for git-log + metrics analysis"),
+):
+    """Run LEARN aggregator -> data/learn_runs/{date}_{attribution,proposal}."""
+    from .agent import learn_aggregator
+    art = learn_aggregator.aggregate(since_days=since_days, write=True)
+    rprint(f"[green]learn run complete[/green]")
+    rprint(f"  actor commits analyzed:    {art['actor_commits_analyzed']}")
+    rprint(f"  critique commits analyzed: {art['critique_commits_analyzed']}")
+    rprint(f"  metric snapshots:          {art['metric_snapshots_available']}")
+    rprint(f"  rules attributed:          {len(art['rule_attribution'])}")
+    rprint(f"  summary: {art['summary']}")
+
+
+@app.command("loop")
+def cmd_loop(
+    skip_poll: bool = typer.Option(False, "--skip-poll", help="skip source polling"),
+    triage_limit: int = typer.Option(20, help="max papers to triage this iteration"),
+    replicate_limit: int = typer.Option(5, help="max new tradable papers to replicate"),
+    run_learn: bool = typer.Option(False, "--learn", help="also run LEARN aggregator (weekly)"),
+    auto_apply: bool = typer.Option(False, "--auto-apply",
+        help="apply actor proposals to meta/actor.md (default: propose only)"),
+):
+    """Run one full autonomous loop: poll -> triage -> replicate -> critique -> propose."""
+    from .agent import loop as loop_mod
+    result = loop_mod.run(
+        skip_poll=skip_poll,
+        triage_limit=triage_limit,
+        replicate_limit=replicate_limit,
+        run_learn=run_learn,
+        auto_apply_actor=auto_apply,
+    )
+    print(loop_mod.render_summary(result))
+
+
 if __name__ == "__main__":
     app()

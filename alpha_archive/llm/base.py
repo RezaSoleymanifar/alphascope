@@ -74,4 +74,21 @@ class LLMProvider(ABC):
             if text.startswith("json"):
                 text = text[4:]
             text = text.strip().rstrip("`").strip()
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+        # Fallback: extract first balanced {...} from anywhere in the text.
+        start = text.find("{")
+        if start < 0:
+            raise json.JSONDecodeError("no '{' found in LLM output", text, 0)
+        depth = 0
+        for i in range(start, len(text)):
+            c = text[i]
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    return json.loads(text[start:i + 1])
+        raise json.JSONDecodeError("unbalanced braces in LLM output", text, start)
