@@ -121,7 +121,7 @@ def extract_spec(
     """Extract spec twice with different seeds; return (spec, agreement_score, debug).
 
     Per actor.md: if agreement < `require_agreement`, caller should escalate to human.
-    Uses pluggable LLM provider (see alphascope.llm.factory.get_provider).
+    Uses pluggable LLM provider (see alpha_archive.llm.factory.get_provider).
     """
     from ..llm import get_provider
     provider = get_provider()

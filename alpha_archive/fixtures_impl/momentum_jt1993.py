@@ -43,8 +43,8 @@ SPEC = {
 
 
 if __name__ == "__main__":
-    from alphascope.backtest import run_signal_backtest
-    from alphascope.fixtures import get_fixture
+    from alpha_archive.backtest import run_signal_backtest
+    from alpha_archive.fixtures import get_fixture
 
     fx = get_fixture("momentum_jt1993")
     result = run_signal_backtest(

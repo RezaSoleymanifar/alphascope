@@ -19,7 +19,7 @@ from ..llm import get_provider
 
 SCREEN_MODEL = "haiku"
 
-SCREEN_PROMPT = """You are a moderator for AlphaScope, an open-source platform that replicates academic quant finance papers and publishes verdicts (ship / iterate / kill). Users can submit challenges to AlphaScope's automated replications.
+SCREEN_PROMPT = """You are a moderator for Alpha Archive, an open-source platform that replicates academic quant finance papers and publishes verdicts (ship / iterate / kill). Users can submit challenges to Alpha Archive's automated replications.
 
 Judge whether the following submission should pass initial screening.
 

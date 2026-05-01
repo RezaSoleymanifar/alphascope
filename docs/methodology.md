@@ -1,4 +1,4 @@
-# AlphaScope methodology
+# Alpha Archive methodology
 
 Every paper goes through the same pipeline. No cherry-picking, no parameter tuning per paper. This document is the public methodology spec.
 
@@ -65,7 +65,7 @@ DSR = Φ((SR - E[max SR | null]) × √(T-1) /
 ```
 
 We correct for:
-- N = total signals tested across the AlphaScope platform (cumulative)
+- N = total signals tested across the Alpha Archive platform (cumulative)
 - Skew + kurtosis of strategy returns
 - Sample size T
 
@@ -119,7 +119,7 @@ For every published result:
 - Seed for stochastic components
 - Backtest run timestamp
 
-A user can `git clone alphascope && uv run alphascope replay <result_id>` and reproduce the result byte-for-byte.
+A user can `git clone alpha-archive && uv run alpha-archive replay <result_id>` and reproduce the result byte-for-byte.
 
 ## 12. Honest limitations
 
@@ -127,4 +127,4 @@ A user can `git clone alphascope && uv run alphascope replay <result_id>` and re
 - **Universe drift**: SP500 PIT membership is approximated until full Compustat / CRSP integration.
 - **Survivorship**: best-effort; depends on vendor data quality.
 - **Lookahead**: LLM-generated code is reviewed; can still introduce subtle leaks.
-- **Generalization**: AlphaScope replicates **published methodology**. Novel discoveries by authors not in the paper are not captured.
+- **Generalization**: Alpha Archive replicates **published methodology**. Novel discoveries by authors not in the paper are not captured.

@@ -27,7 +27,7 @@ def poll_ssrn(limit: int = 50) -> list[dict]:
     """
     headers = {
         "User-Agent": (
-            "Mozilla/5.0 (compatible; AlphaScope/0.1; +https://alphascope.io)"
+            "Mozilla/5.0 (compatible; AlphaArchive/0.1; +https://alpha-archive.io)"
         )
     }
     try:

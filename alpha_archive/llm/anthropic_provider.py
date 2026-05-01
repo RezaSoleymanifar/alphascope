@@ -1,6 +1,6 @@
 """Anthropic SDK backend — direct API calls.
 
-Activates when ALPHASCOPE_LLM_PROVIDER=anthropic and ANTHROPIC_API_KEY is set.
+Activates when ALPHA_ARCHIVE_LLM_PROVIDER=anthropic and ANTHROPIC_API_KEY is set.
 """
 from __future__ import annotations
 

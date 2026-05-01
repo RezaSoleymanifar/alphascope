@@ -137,7 +137,7 @@ def generate_signal_code(
 ) -> tuple[str, ValidationResult, list[str]]:
     """Generate code; on validation failure, feed errors back to model.
     Returns (final_code, final_validation, attempt_log).
-    Uses pluggable LLM provider (see alphascope.llm.factory.get_provider).
+    Uses pluggable LLM provider (see alpha_archive.llm.factory.get_provider).
     """
     from dataclasses import asdict
     from ..llm import get_provider

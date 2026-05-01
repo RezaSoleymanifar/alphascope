@@ -37,7 +37,7 @@ def load_signal_callable(code: str) -> tuple[Optional[Callable], Optional[str]]:
     """
     safe_globals = {
         "__builtins__": SAFE_BUILTINS,
-        "__name__": "alphascope_sandbox",
+        "__name__": "alpha_archive_sandbox",
     }
     try:
         compiled = compile(code, "<sandbox>", "exec")

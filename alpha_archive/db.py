@@ -1,4 +1,4 @@
-"""SQLite schema + ORM models for AlphaScope.
+"""SQLite schema + ORM models for Alpha Archive.
 
 Three core tables:
 - papers: ingested papers from any source (arXiv, SSRN, NBER, manual)
@@ -25,7 +25,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
-DB_PATH = Path(__file__).resolve().parents[1] / "data" / "alphascope.sqlite"
+DB_PATH = Path(__file__).resolve().parents[1] / "data" / "alpha_archive.sqlite"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 ENGINE = create_engine(f"sqlite:///{DB_PATH}", echo=False, future=True)

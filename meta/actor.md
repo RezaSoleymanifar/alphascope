@@ -8,7 +8,7 @@ v0.1.0 — initial bootstrap
 
 ## Stage policies
 
-### 1. Ingest (`alphascope.ingest`)
+### 1. Ingest (`alpha_archive.ingest`)
 
 - Poll all sources daily at 06:00 UTC
 - Dedupe by `(source, external_id)` — never re-ingest a paper
@@ -16,7 +16,7 @@ v0.1.0 — initial bootstrap
 - On source failure (HTTP 4xx/5xx, parse error): log, retry next cycle, do NOT crash
 - Cap per-poll at 1000 papers per source to bound LLM cost
 
-### 2. Triage (`alphascope.triage`)
+### 2. Triage (`alpha_archive.triage`)
 
 **Goal**: filter "is this a tradable signal?" with low FN rate.
 
@@ -24,7 +24,7 @@ Current rules:
 - Use Claude Haiku (`claude-haiku-4-5-20251001`) for cost
 - Asymmetric voting: if Haiku says `tradable` → trust. If Haiku says `not_tradable` → second-opinion with Sonnet before discarding.
 - Confidence threshold: only mark `not_tradable` if Haiku confidence ≥ 0.7. Below that → escalate to Sonnet.
-- Output structured JSON only (refer to `alphascope/triage.py:TRIAGE_PROMPT`)
+- Output structured JSON only (refer to `alpha_archive/triage.py:TRIAGE_PROMPT`)
 - Log every decision + score for the calibration loop
 
 False-negative red flags (escalate immediately):
@@ -32,7 +32,7 @@ False-negative red flags (escalate immediately):
 - Abstract has numerical results (Sharpe, t-stat, return)
 - Author affiliation is academic finance department or known quant firm
 
-### 3. Extract (`alphascope.extract` — to build)
+### 3. Extract (`alpha_archive.extract` — to build)
 
 **Goal**: convert PDF → structured signal spec with high fidelity.
 
@@ -43,7 +43,7 @@ Current rules (initial):
 - Cache PDF text under `data/papers/{paper_id}.pdf.txt` for replay
 - Hard requirement: spec must include `formula`, `data_required`, `universe`, `horizon_days`, `expected_sign`. Missing any → mark spec incomplete.
 
-### 4. Implement (`alphascope.codegen` — to build)
+### 4. Implement (`alpha_archive.codegen` — to build)
 
 **Goal**: convert spec → working Python `signal(prices)` function with no leakage.
 
@@ -59,7 +59,7 @@ Current rules (initial):
 - Run in Docker sandbox (no network, ephemeral fs, 1 CPU, 2GB mem)
 - If validation fails: feed the error back to Sonnet (max 3 self-correction attempts), then escalate
 
-### 5. Backtest (`alphascope.backtest.runner.run_signal_backtest`)
+### 5. Backtest (`alpha_archive.backtest.runner.run_signal_backtest`)
 
 **Goal**: standardized backtest, no per-paper tuning.
 
@@ -73,7 +73,7 @@ Locked parameters (per `north_star.md`):
 - Long-only OR long-short: per spec; default long-short for cross-sectional, long-only for time-series
 - Top quintile (20%) for discrete rank strategies; continuous-weight for regression-output strategies
 
-### 6. Verdict (`alphascope.backtest.runner.assign_verdict`)
+### 6. Verdict (`alpha_archive.backtest.runner.assign_verdict`)
 
 Per `north_star.md` decision boundaries. Asymmetric:
 - `ship` requires ALL 4 gates pass
@@ -84,7 +84,7 @@ Never auto-`kill` on a single negative metric.
 
 ### 7. Publish
 
-Every result → public landing page at `alphascope.io/papers/{paper_id}`:
+Every result → public landing page at `alpha-archive.io/papers/{paper_id}`:
 - Original paper link + abstract
 - Extracted spec (versioned)
 - Generated code (versioned, public)

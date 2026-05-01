@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from alphascope.meta.eval_loop import evaluate_all_fixtures
-from alphascope.meta.calibration import log_metrics, platform_metrics, regression_check
+from alpha_archive.meta.eval_loop import evaluate_all_fixtures
+from alpha_archive.meta.calibration import log_metrics, platform_metrics, regression_check
 
 
 def main():

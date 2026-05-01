@@ -1,4 +1,4 @@
-"""Provider selection. Reads ALPHASCOPE_LLM_PROVIDER env var.
+"""Provider selection. Reads ALPHA_ARCHIVE_LLM_PROVIDER env var.
 
 Order of fallback:
   1. explicit override (function arg or env var)
@@ -33,7 +33,7 @@ def _build(name: str) -> LLMProvider:
 @cache
 def get_provider(override: Optional[str] = None) -> LLMProvider:
     """Pick provider. Cached: same provider returned on subsequent calls."""
-    chosen = override or os.environ.get("ALPHASCOPE_LLM_PROVIDER")
+    chosen = override or os.environ.get("ALPHA_ARCHIVE_LLM_PROVIDER")
     if chosen:
         return _build(chosen)
 
@@ -55,7 +55,7 @@ def info() -> dict:
         "selected": p.name,
         "anthropic_key_present": bool(os.environ.get("ANTHROPIC_API_KEY")),
         "claude_cli_on_path": shutil.which("claude") is not None,
-        "override": os.environ.get("ALPHASCOPE_LLM_PROVIDER"),
+        "override": os.environ.get("ALPHA_ARCHIVE_LLM_PROVIDER"),
     }
 
 

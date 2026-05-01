@@ -1,7 +1,7 @@
 {
   "paper_id": "macd_demo_15",
   "paper_title": "VP-MACD US Equity Indices",
-  "pdf_path": "C:\\Users\\reza\\dev\\alphascope\\data\\papers\\macd_demo_15.pdf",
+  "pdf_path": "C:\\Users\\reza\\dev\\alpha-archive\\data\\papers\\macd_demo_15.pdf",
   "spec": {
     "hypothesis": "Replacing the conventional MACD price input with a volume-, volatility-, and intraday-structure-adjusted price series, combined with a sensitivity parameter \u03bb that relaxes the crossover threshold, produces earlier and more selective trading signals with superior risk-adjusted returns on U.S. equity indices.",
     "formula": "Compute adjusted price P*_t as the N-day rolling sum of (Close_i \u00d7 Volume_i \u00d7 \u03c3_i \u00d7 r_i) divided by the N-day rolling sum of Volume_i, where \u03c3_i = rolling_std(High_i \u2212 Low_i) / Close_i and r_i = (Close_i \u2212 Open_i) / (High_i \u2212 Low_i). Construct VP-MACD_t = EMA12(P*) \u2212 EMA26(P*) and Signal_t = EMA9(VP-MACD). Buy when VP-MACD_{t-1} \u2264 \u03bb\u00b7Signal_{t-1} and VP-MACD_t > \u03bb\u00b7Signal_t; Sell when VP-MACD_{t-1} \u2265 Signal_{t-1} and VP-MACD_t < Signal_t, with \u03bb \u2208 (0.8, 1) calibrated in-sample.",

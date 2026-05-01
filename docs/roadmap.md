@@ -1,37 +1,57 @@
-# AlphaScope roadmap
+# Alpha Archive roadmap
 
-## Phase 0 — Skeleton (you are here)
+## Phase 0 — Skeleton ✅ shipped
 
 - [x] Repo initialized
 - [x] SQLite schema (papers, specs, results)
-- [x] Source pollers: arXiv, SSRN, NBER, AlphaArchitect
+- [x] Source pollers: arXiv, SSRN, NBER, AlphaArchitect, AQR, Two Sigma (curated-first hierarchy)
 - [x] Ingest pipeline + dedup
-- [x] LLM triage scaffold (Anthropic Haiku)
-- [x] Typer CLI: `init`, `poll`, `triage`, `stats`, `list`
-- [x] Docs: README, architecture, methodology, roadmap
+- [x] LLM triage scaffold (Claude Haiku)
+- [x] Typer CLI: `init`, `poll`, `triage`, `stats`, `list`, `replicate`, `install-fixtures`, `evaluate`, `llm-info`
+- [x] Docs: README, architecture, methodology, roadmap, demo_run, go-to-market, meta_learning
 
-## Phase 1 — LLM extraction + first end-to-end
+## Phase 0.5 — Fixture calibration ✅ shipped
 
-- [ ] PDF downloader + text extractor (pypdf)
-- [ ] Sonnet-driven spec extractor → `specs` table populated
-- [ ] Sonnet-driven code generator → `Spec.code` populated
-- [ ] Sandbox executor (Docker, no network, time-limited)
-- [ ] Smoke test: end-to-end on 5 known papers (Jegadeesh-Titman momentum, Fama-French value, AQR BAB, etc.)
-- [ ] Human review queue for generated code
+- [x] OpenAP CrossSection bootstrap loader → 326 ground-truth fixtures with literature labels (165 ship / 47 iterate / 114 kill)
+- [x] Hand-coded canonical anomalies (Jegadeesh-Titman 1993 momentum)
+- [x] Adversarial random fixtures for FP-rate calibration
+- [x] Fixture set total: 332 (was 6 pre-bootstrap) → meta-loop F1 now statistically meaningful
 
-## Phase 2 — Backtest engine
+## Phase 1 — LLM extraction + first end-to-end ✅ shipped
 
-- [ ] Price loader: yfinance MVP, EOD historical fallback
-- [ ] Fundamentals loader: yfinance + grain integration
+- [x] PDF downloader + text extractor (pypdf, 30 pages)
+- [x] Sonnet-driven spec extractor with self-consistency check (run 2× different temps, agreement ≥ 0.85 gate)
+- [x] Sonnet-driven code generator → `Spec.code` populated
+- [x] Sandbox executor (restricted-builtins exec, no network, deterministic, time-limited)
+- [x] AST-level validation gates: signature, imports, no-lookahead, no-banned-tokens, deterministic
+- [x] End-to-end smoke test on real arXiv paper (VP-MACD, see [docs/demo_run.md](./demo_run.md))
+- [x] Pluggable LLM provider abstraction: `claude_code` (free via Max plan) | `anthropic` (API key) | `offline`
+
+## Phase 2 — Backtest engine 🟡 in progress
+
+- [x] Price loader: grain parquet primary, yfinance fallback
+- [x] Universe loader (SP500 from grain snapshot — PIT approximation)
+- [x] IC report card (mean, std, ICIR, t-stat)
+- [x] Purged + embargoed CV
+- [x] DSR implementation (Bailey + Lopez de Prado 2014)
+- [x] Strategy stats (Sharpe, drawdown, turnover)
+- [x] Asymmetric verdict assignment (ship / iterate / kill — bias toward iterate)
+- [ ] Cost model (5bps + sqrt market impact) — basic 5bps in place; impact term pending
+- [ ] Fundamentals loader (Sharadar Core US — gated on $200/mo subscription decision)
 - [ ] FRED macro loader
-- [ ] Universe loader (SP500 PIT membership approximation)
-- [ ] IC report card
-- [ ] Purged + embargoed CV
-- [ ] DSR implementation
-- [ ] Cost model (5bps + sqrt impact)
-- [ ] Strategy stats (Sharpe, drawdown, Calmar, turnover)
-- [ ] Regime analysis splits
-- [ ] CPCV (Phase 2.5)
+- [ ] Regime analysis splits (VIX / NBER / rate regime)
+- [ ] CPCV (Combinatorial Purged CV)
+
+## Phase 2.5 — Meta-learning + community 🟡 scaffolded
+
+- [x] Meta governance files: `north_star.md` (immutable goal), `actor.md` (mutable policy), `critique.md` (mutable, learn-edited), `learn.md` (immutable meta-meta), `community.md` (mutable crowdsourcing)
+- [x] Asymmetric loss function: `L = 5·FN + 1·FP + 2·|repl_score − 0.6|` (FN weighted 5× because losing real signal is permanent)
+- [x] Calibration metric logger (`alpha_archive/meta/calibration.py`)
+- [x] Eval loop runner (`alpha_archive/meta/eval_loop.py`)
+- [x] Community layer scaffolded: 7 SQLAlchemy models, 5-gate Community-Notes-style verification, reputation system, faction-bipartisan agreement, GitHub-issue scraper (no social-media trawl)
+- [ ] Critic agent that reads ReplicationReport and applies critique.md rubric
+- [ ] Weekly cron: actor self-edits + learn-proposed PRs
+- [ ] Public landing page per merged community contribution
 
 ## Phase 3 — Web MVP (Streamlit)
 
@@ -42,7 +62,7 @@
 - [ ] Public deployment on Streamlit Cloud / Render
 - [ ] Basic SEO (per-paper canonical URL, OG tags, sitemap)
 
-## Phase 4 — Public launch (alphascope.io)
+## Phase 4 — Public launch (alpha-archive.io)
 
 - [ ] Domain + DNS + Vercel/Railway deploy
 - [ ] Next.js frontend replacing Streamlit
@@ -83,7 +103,7 @@
 - [ ] Native discovery (not just replication): generate alpha hypotheses via LLM, test them
 - [ ] Ensemble: combine top-N signals into composite portfolio
 - [ ] Live paper-trading for top signals (via Alpaca / IB)
-- [ ] Research papers: AlphaScope itself publishes findings on factor zoo behavior
+- [ ] Research papers: Alpha Archive itself publishes findings on factor zoo behavior
 
 ## Non-goals (intentionally not building)
 
