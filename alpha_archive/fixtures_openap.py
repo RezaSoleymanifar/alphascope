@@ -47,7 +47,7 @@ def download_signaldoc(force: bool = False) -> Path:
     if OPENAP_CACHE.exists() and not force:
         return OPENAP_CACHE
     print(f"downloading {OPENAP_URL} ...")
-    req = urllib.request.Request(OPENAP_URL, headers={"User-Agent": "AlphaScope/0.1"})
+    req = urllib.request.Request(OPENAP_URL, headers={"User-Agent": "AlphaArchive/0.1"})
     with urllib.request.urlopen(req, timeout=60) as resp:
         OPENAP_CACHE.write_bytes(resp.read())
     return OPENAP_CACHE

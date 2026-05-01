@@ -37,7 +37,7 @@ class Fixture:
     notes: str = ""
 
     # Hand-coded reference implementation (golden — what code-gen should produce)
-    reference_module: Optional[str] = None  # e.g., "alphascope.fixtures_impl.momentum_jt1993"
+    reference_module: Optional[str] = None  # e.g., "alpha_archive.fixtures_impl.momentum_jt1993"
 
 
 FIXTURES: list[Fixture] = [
@@ -63,7 +63,7 @@ FIXTURES: list[Fixture] = [
             "McLean & Pontiff 2016 (post-publication decay)",
         ],
         notes="Canonical cross-sectional momentum. Survives in 95%+ of replication studies. Strong signal in trending regimes; suffers in mean-reverting (e.g., 2009 momentum crash, March 2020).",
-        reference_module="alphascope.fixtures_impl.momentum_jt1993",
+        reference_module="alpha_archive.fixtures_impl.momentum_jt1993",
     ),
     Fixture(
         fixture_id="value_fama_french_1992",
@@ -168,7 +168,7 @@ FIXTURES: list[Fixture] = [
         canonical_formula="random.uniform(-1, 1) per stock per day",
         ground_truth_sources=["fabricated for pipeline regression test"],
         notes="Adversarial fixture: pipeline MUST kill this. Catches false positive verdicts.",
-        reference_module="alphascope.fixtures_impl.adversarial_random",
+        reference_module="alpha_archive.fixtures_impl.adversarial_random",
     ),
 ]
 

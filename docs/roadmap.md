@@ -1,4 +1,4 @@
-# AlphaScope roadmap
+# Alpha Archive roadmap
 
 ## Phase 0 — Skeleton (you are here)
 
@@ -42,7 +42,7 @@
 - [ ] Public deployment on Streamlit Cloud / Render
 - [ ] Basic SEO (per-paper canonical URL, OG tags, sitemap)
 
-## Phase 4 — Public launch (alphascope.io)
+## Phase 4 — Public launch (alpha-archive.io)
 
 - [ ] Domain + DNS + Vercel/Railway deploy
 - [ ] Next.js frontend replacing Streamlit
@@ -83,7 +83,7 @@
 - [ ] Native discovery (not just replication): generate alpha hypotheses via LLM, test them
 - [ ] Ensemble: combine top-N signals into composite portfolio
 - [ ] Live paper-trading for top signals (via Alpaca / IB)
-- [ ] Research papers: AlphaScope itself publishes findings on factor zoo behavior
+- [ ] Research papers: Alpha Archive itself publishes findings on factor zoo behavior
 
 ## Non-goals (intentionally not building)
 

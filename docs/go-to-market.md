@@ -1,8 +1,8 @@
-# AlphaScope go-to-market
+# Alpha Archive go-to-market
 
 ## Audience tiers
 
-| Audience | Pain | What AlphaScope provides | Acquisition channel |
+| Audience | Pain | What Alpha Archive provides | Acquisition channel |
 |---|---|---|---|
 | **Quant retail / Twitter** | Reads papers, doesn't have time/skill to backtest | One-click verdict per paper | Quant Twitter, r/quant, Hacker News |
 | **Hedge fund DD / LP teams** | Vetting fund manager pitches that cite papers | "did this paper actually work post-publication?" | LinkedIn, conferences (CFA, AIMA) |
@@ -13,7 +13,7 @@
 ## Distribution wedge — what makes it spread
 
 ### 1. SEO moat
-Every replicated paper = a landing page indexed by Google. Search "[paper title]" → AlphaScope page in top 3.
+Every replicated paper = a landing page indexed by Google. Search "[paper title]" → Alpha Archive page in top 3.
 
 Volume: 80K+ pages over 5 years. Each gets occasional traffic from people Googling the paper. Compound.
 
@@ -24,7 +24,7 @@ Each result is a tweet:
 > Our Sharpe: 0.8 (DSR-corrected)
 > Replication score: 0.67 (✅ partial)
 > Decay: -28% post-pub
-> Code: alphascope.io/papers/12345"
+> Code: alpha-archive.io/papers/12345"
 
 Quant Twitter eats this. Each post drives 100-1000 visits. Replicate 3/week = consistent presence.
 
@@ -41,7 +41,7 @@ Substack-friendly. Free tier acquires; paid tier funds.
 GitHub repo with all generated code. Pull requests for improvements. Lowers barrier for quant blogger ecosystem to cite us.
 
 ### 5. Conference & academic credibility
-- Submit AlphaScope itself as a paper to JFE/JF/RFS — "Replicating the factor zoo at scale"
+- Submit Alpha Archive itself as a paper to JFE/JF/RFS — "Replicating the factor zoo at scale"
 - Sponsor / present at AFA, EFA, CFA Institute events
 - Partner with academic departments for student projects
 
@@ -54,7 +54,7 @@ GitHub repo with all generated code. Pull requests for improvements. Lowers barr
 - Write 3 launch blog posts
 
 ### Soft launch (month 3)
-- Launch on Hacker News with title: "AlphaScope: I built an LLM-powered replication engine for quant finance papers"
+- Launch on Hacker News with title: "Alpha Archive: I built an LLM-powered replication engine for quant finance papers"
 - Cross-post r/algotrading, r/quant, r/machinelearning
 - Email 50 quant Twitter accounts with personalized DM + 1 result they'd find interesting
 - Ship newsletter signup form
@@ -66,7 +66,7 @@ GitHub repo with all generated code. Pull requests for improvements. Lowers barr
 - Get cited in 1 academic paper
 
 ### Scale (year 2+)
-- alphascope.io = standard reference for quant practitioners
+- alpha-archive.io = standard reference for quant practitioners
 - Hire researcher to investigate flagged anomalies
 - Pro tier subscriber funnel
 - Conference sponsorship + presence
@@ -105,7 +105,7 @@ GitHub repo with all generated code. Pull requests for improvements. Lowers barr
 
 ## Reza-specific bonus value
 
-Whether or not AlphaScope grows commercially:
+Whether or not Alpha Archive grows commercially:
 - **Interview gold**: every QR seat will love this project. Demonstrates ML + finance + product + scale thinking.
 - **Network**: contacts at AlphaArchitect, Quantpedia, Two Sigma research will engage
 - **Content asset**: blog posts compound into a public profile

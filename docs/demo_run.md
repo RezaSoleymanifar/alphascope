@@ -14,7 +14,7 @@ A real arXiv paper, ingested via the polling pipeline:
 ## Pipeline command
 
 ```bash
-uv run alphascope replicate macd_demo_15 https://arxiv.org/pdf/2604.26063v1 \
+uv run alpha-archive replicate macd_demo_15 https://arxiv.org/pdf/2604.26063v1 \
     --title "VP-MACD US Equity Indices"
 ```
 
@@ -111,11 +111,11 @@ Notable: the model gracefully handled missing intraday data (paper assumes OHLC;
 ## Reproduce yourself
 
 ```bash
-git clone https://github.com/RezaSoleymanifar/alphascope
-cd alphascope
+git clone https://github.com/RezaSoleymanifar/alpha-archive
+cd alpha-archive
 uv sync
-uv run alphascope init
-uv run alphascope poll arxiv --limit 50
-uv run alphascope triage --limit 20
-uv run alphascope replicate <paper_id> <pdf_url>
+uv run alpha-archive init
+uv run alpha-archive poll arxiv --limit 50
+uv run alpha-archive triage --limit 20
+uv run alpha-archive replicate <paper_id> <pdf_url>
 ```

@@ -1,8 +1,8 @@
-# AlphaScope
+# Alpha Archive
 
 > **Every quantitative finance paper, replicated. Open. Verified.**
 
-AlphaScope is an automated signal-extraction engine. It ingests academic papers from arXiv / SSRN / NBER, uses LLMs to extract the trading signal specification, runs each through a standardized backtest pipeline, and publishes the results.
+Alpha Archive is an automated signal-extraction engine. It ingests academic papers from arXiv / SSRN / NBER, uses LLMs to extract the trading signal specification, runs each through a standardized backtest pipeline, and publishes the results.
 
 ## Why this exists
 
@@ -11,7 +11,7 @@ AlphaScope is an automated signal-extraction engine. It ingests academic papers 
 - **Quantpedia charges $300/yr** for static curated database with no live re-runs.
 - **Nothing exists** that's: (1) automated, (2) free, (3) live-updating, (4) standardized methodology, (5) crowdsourced.
 
-LLMs can now read papers, extract signal specifications, and write the implementation code. AlphaScope is the productized version of that loop.
+LLMs can now read papers, extract signal specifications, and write the implementation code. Alpha Archive is the productized version of that loop.
 
 ## What it does
 
@@ -20,7 +20,7 @@ arXiv / SSRN / NBER feed   →   LLM triage (is this tradable?)
                            →   LLM extracts spec (formula, data, horizon, claimed Sharpe)
                            →   Auto-generates feature.py implementation
                            →   Runs purged-CV backtest with DSR correction
-                           →   Publishes result on alphascope.io/papers/{id}
+                           →   Publishes result on alpha-archive.io/papers/{id}
                            →   Tracks alpha decay over time
 ```
 
@@ -34,7 +34,7 @@ Each paper gets a public landing page with:
 
 ## Differentiators
 
-| | AlphaArchitect | Quantpedia | AlphaScope |
+| | AlphaArchitect | Quantpedia | Alpha Archive |
 |---|---|---|---|
 | Cost | Free blog | $300/yr | Free + open |
 | Coverage | ~50 papers/yr (manual) | 700+ static | 1000s/yr automated |
@@ -46,7 +46,7 @@ Each paper gets a public landing page with:
 
 ## Vision: Central intelligence for quant finance
 
-AlphaScope combines three loops into one knowledge base:
+Alpha Archive combines three loops into one knowledge base:
 
 1. **Automated replication** — LLM reads paper, extracts spec, writes code, runs backtest
 2. **Meta-learning critique** — internal critic agent judges every result; actor self-improves; learn improves the critic
@@ -59,12 +59,12 @@ Like Wikipedia for trading signals, with executable code + live backtests + bipa
 ## Quick start (developer)
 
 ```bash
-git clone https://github.com/<you>/alphascope
-cd alphascope
+git clone https://github.com/<you>/alpha-archive
+cd alpha-archive
 uv sync                         # Python env
-uv run alphascope poll arxiv    # fetch new papers
-uv run alphascope triage        # LLM triage queue
-uv run alphascope eval <paper-id>
+uv run alpha-archive poll arxiv    # fetch new papers
+uv run alpha-archive triage        # LLM triage queue
+uv run alpha-archive eval <paper-id>
 ```
 
 ## Architecture
@@ -99,13 +99,13 @@ See [docs/roadmap.md](./docs/roadmap.md). Phased:
 - **Phase 1**: LLM triage + spec extraction working on arXiv
 - **Phase 2**: Backtest engine producing IC reports
 - **Phase 3**: Web UI MVP (Streamlit)
-- **Phase 4**: Public launch on alphascope.io
+- **Phase 4**: Public launch on alpha-archive.io
 - **Phase 5**: Crowdsourced submissions + community
 
 ## Why this could become popular
 
 - **SEO win**: each replicated paper = a landing page with original keywords + Sharpe + chart
-- **Quant Twitter**: practitioners constantly debate factor zoo; AlphaScope provides verdict-in-a-link
+- **Quant Twitter**: practitioners constantly debate factor zoo; Alpha Archive provides verdict-in-a-link
 - **Educational**: students + retail quants can learn what works
 - **Fund DD value**: hedge fund LPs use it to vet manager pitches ("did this actually work post-publication?")
 - **Content engine**: weekly newsletter "5 papers replicated this week"

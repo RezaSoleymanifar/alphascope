@@ -36,10 +36,10 @@ A structured submission attached to a `Result` row. Three kinds:
 
 ### 1. Challenge
 
-> "AlphaScope's replication of [paper X] is wrong because [evidence]."
+> "Alpha Archive's replication of [paper X] is wrong because [evidence]."
 
 Required fields:
-- `paper_id` (which AlphaScope result is being challenged)
+- `paper_id` (which Alpha Archive result is being challenged)
 - `claim` (what's wrong, ≤ 500 chars)
 - `evidence_type`: `text_quote_from_paper` | `alternative_code` | `external_replication` | `published_critique`
 - `evidence_payload` (the quote, code, link, or DOI)
@@ -146,8 +146,8 @@ Moderator threshold: 1000
 We DO NOT scrape Twitter/X, Reddit, or Substack. Those channels are 99% noise; mining them costs more in spam-filtering than the signal yields. Per the principle "signal over noise", critics come to us.
 
 Active scraping (autonomous, daily):
-1. **GitHub issues** on the alphascope repo — anyone can file an issue to challenge a verdict; LLM auto-classifies it into a Tier-1 community_signal
-2. **Replies on alphascope-published landing pages** (when web UI ships, Phase 4) — comments + "this is wrong" buttons
+1. **GitHub issues** on the Alpha Archive repo — anyone can file an issue to challenge a verdict; LLM auto-classifies it into a Tier-1 community_signal
+2. **Replies on Alpha Archive-published landing pages** (when web UI ships, Phase 4) — comments + "this is wrong" buttons
 3. **Email submissions** to a published address (Phase 4)
 
 That's it. No social-media trawl. Twitter et al. may be revisited in Phase 6+ if and only if a high-precision filter exists.
@@ -165,7 +165,7 @@ Specifically:
 
 Learn now also reads:
 - `data/community_runs/` (per-day rollup of community activity)
-- `git log` on `alphascope/baselines/` (where merged community implementations live)
+- `git log` on `alpha_archive/baselines/` (where merged community implementations live)
 
 Attribution model extends:
 - Did community-merged change reduce asymmetric loss in next 4 weeks? → amplify rules that surfaced it

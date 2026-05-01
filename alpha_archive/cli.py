@@ -1,4 +1,4 @@
-"""AlphaScope CLI."""
+"""Alpha Archive CLI."""
 from __future__ import annotations
 
 import json
@@ -12,7 +12,7 @@ from .ingest import ingest as ingest_fn, SOURCES
 from .triage import triage_pending
 from sqlalchemy import select, func
 
-app = typer.Typer(help="AlphaScope — paper-to-backtest replication engine")
+app = typer.Typer(help="Alpha Archive — paper-to-backtest replication engine")
 
 
 @app.command("init")

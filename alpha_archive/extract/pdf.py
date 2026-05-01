@@ -16,7 +16,7 @@ def download_pdf(url: str, paper_id: str, force: bool = False) -> Path:
     if out.exists() and not force:
         return out
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; AlphaScope/0.1; +https://alphascope.io)",
+        "User-Agent": "Mozilla/5.0 (compatible; AlphaArchive/0.1; +https://alpha-archive.io)",
     }
     with httpx.Client(headers=headers, follow_redirects=True, timeout=60) as client:
         r = client.get(url)

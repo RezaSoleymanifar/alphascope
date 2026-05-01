@@ -2,7 +2,7 @@
 
 Per meta/community.md: we do NOT scrape Twitter / Reddit / Substack. Those
 channels are 99% noise. Critics come to us via:
-  - GitHub issues on the alphascope repo (working today via `gh` CLI)
+  - GitHub issues on the alpha_archive repo (working today via `gh` CLI)
   - Web UI comments on published landing pages (Phase 4)
   - Email submissions (Phase 4)
 
@@ -24,8 +24,8 @@ class ExternalMention:
     paper_id_guess: int | None = None
 
 
-def scrape_github_issues(repo: str = "RezaSoleymanifar/alphascope") -> list[ExternalMention]:
-    """Fetch open issues on the alphascope repo. Working today via `gh` CLI."""
+def scrape_github_issues(repo: str = "RezaSoleymanifar/alpha-archive") -> list[ExternalMention]:
+    """Fetch open issues on the alpha_archive repo. Working today via `gh` CLI."""
     import subprocess
     try:
         out = subprocess.run(
@@ -68,7 +68,7 @@ def scrape_substack(feed_urls: list[str]) -> list[ExternalMention]:
     return []
 
 
-CLASSIFY_PROMPT = """You are classifying an external mention of an AlphaScope paper replication.
+CLASSIFY_PROMPT = """You are classifying an external mention of an Alpha Archive paper replication.
 
 The mention text is:
 ---
@@ -76,11 +76,11 @@ The mention text is:
 ---
 
 Classify the mention as ONE of:
-  endorsement   (positive, agrees with AlphaScope's verdict)
+  endorsement   (positive, agrees with Alpha Archive's verdict)
   critique      (challenges methodology, data, or verdict)
   alternative   (proposes a different implementation)
   discussion    (neutral discussion, no actionable claim)
-  unrelated     (does not actually reference an AlphaScope replication)
+  unrelated     (does not actually reference an Alpha Archive replication)
 
 Output JSON: {{"signal_type": ..., "extracted_claim": "1-sentence", "actionable": true|false}}
 """

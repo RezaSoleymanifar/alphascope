@@ -1,8 +1,8 @@
-# AlphaScope architecture
+# Alpha Archive architecture
 
 ## Overview
 
-AlphaScope is a 5-layer pipeline:
+Alpha Archive is a 5-layer pipeline:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -37,7 +37,7 @@ AlphaScope is a 5-layer pipeline:
 
 ## Data flow
 
-1. **Cron** (or manual) triggers `alphascope poll <source>`.
+1. **Cron** (or manual) triggers `alpha-archive poll <source>`.
 2. Source poller returns standardized paper dicts.
 3. Ingest dedupes against existing `papers` table; new rows get `triage_status=pending`.
 4. **Triage worker** picks pending papers, calls Haiku with abstract → updates `triage_status` + `triage_score`.
