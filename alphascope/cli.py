@@ -22,6 +22,14 @@ def cmd_init():
     rprint(f"[green]initialized[/green] {p}")
 
 
+@app.command("llm-info")
+def cmd_llm_info():
+    """Show which LLM provider is selected and why."""
+    from .llm.factory import info
+    import json as _json
+    rprint(_json.dumps(info(), indent=2))
+
+
 @app.command("poll")
 def cmd_poll(
     source: str = typer.Argument("all", help=f"one of {list(SOURCES.keys())} or 'all'"),

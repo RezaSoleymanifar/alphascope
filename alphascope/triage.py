@@ -1,22 +1,20 @@
 """LLM triage: read each pending paper's abstract, decide if it describes a
 tradable signal. Updates papers.triage_status and papers.triage_score.
 
-Uses Anthropic SDK with Claude Haiku (cheap + fast for scan workload).
-Set ANTHROPIC_API_KEY env var.
+Uses pluggable LLM provider (anthropic / claude_code / offline) — see alphascope.llm.
 """
 from __future__ import annotations
 
 import json
-import os
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import select
 
 from .db import Paper, Session
+from .llm import get_provider
 
 
-TRIAGE_MODEL = "claude-haiku-4-5-20251001"
+TRIAGE_MODEL = "haiku"  # alias resolved by provider
 
 TRIAGE_PROMPT = """You are a quantitative finance research analyst. You read paper abstracts and decide if the paper describes a tradable trading signal that could be backtested.
 
@@ -50,44 +48,20 @@ Output strict JSON:
 """
 
 
-def _client():
-    """Lazy-init Anthropic client. Raises if key missing."""
-    try:
-        from anthropic import Anthropic
-    except ImportError as e:
-        raise RuntimeError("install with: uv add anthropic") from e
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        raise RuntimeError("ANTHROPIC_API_KEY env var not set")
-    return Anthropic(api_key=key)
-
-
-def triage_one(paper: Paper, client=None) -> dict:
+def triage_one(paper: Paper, provider=None) -> dict:
     """Triage a single paper. Returns the parsed JSON dict."""
-    if client is None:
-        client = _client()
+    if provider is None:
+        provider = get_provider()
     prompt = TRIAGE_PROMPT.format(
         title=paper.title or "(no title)",
         abstract=(paper.abstract or "(no abstract)")[:4000],
     )
-    msg = client.messages.create(
-        model=TRIAGE_MODEL,
-        max_tokens=400,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    text = msg.content[0].text.strip()
-    # strip code fences if model wrapped in ```json ... ```
-    if text.startswith("```"):
-        text = text.split("```", 2)[1]
-        if text.startswith("json"):
-            text = text[4:]
-        text = text.strip().rstrip("`").strip()
-    return json.loads(text)
+    return provider.complete_json(prompt, model=TRIAGE_MODEL, max_tokens=400)
 
 
 def triage_pending(limit: int = 50, dry_run: bool = False) -> dict:
     """Triage up to `limit` papers with status='pending'."""
-    client = _client() if not dry_run else None
+    provider = get_provider() if not dry_run else None
     n_tradable = n_not = n_err = 0
     with Session() as s:
         rows = list(s.scalars(
@@ -101,7 +75,7 @@ def triage_pending(limit: int = 50, dry_run: bool = False) -> dict:
                 print(f"[dry] would triage: {p.title[:80]}")
                 continue
             try:
-                result = triage_one(p, client)
+                result = triage_one(p, provider)
                 p.triage_status = "tradable" if result.get("is_tradable") else "not_tradable"
                 p.triage_score = float(result.get("confidence") or 0)
                 p.triage_notes = json.dumps(result)
@@ -121,9 +95,9 @@ def triage_pending(limit: int = 50, dry_run: bool = False) -> dict:
         "not_tradable": n_not,
         "errors": n_err,
         "scanned": len(rows),
+        "provider": provider.name if provider else "(dry)",
     }
 
 
 if __name__ == "__main__":
-    import json as _json
-    print(_json.dumps(triage_pending(limit=10, dry_run=True), indent=2))
+    print(json.dumps(triage_pending(limit=3, dry_run=True), indent=2))

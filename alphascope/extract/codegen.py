@@ -130,17 +130,6 @@ def validate_code(code: str) -> ValidationResult:
     return ValidationResult(ok=len(errors) == 0, errors=errors, warnings=warnings)
 
 
-def _client():
-    try:
-        from anthropic import Anthropic
-    except ImportError as e:
-        raise RuntimeError("install with: uv add anthropic") from e
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        raise RuntimeError("ANTHROPIC_API_KEY env var not set")
-    return Anthropic(api_key=key)
-
-
 def generate_signal_code(
     spec: SignalSpec,
     *,
@@ -148,9 +137,11 @@ def generate_signal_code(
 ) -> tuple[str, ValidationResult, list[str]]:
     """Generate code; on validation failure, feed errors back to model.
     Returns (final_code, final_validation, attempt_log).
+    Uses pluggable LLM provider (see alphascope.llm.factory.get_provider).
     """
     from dataclasses import asdict
-    client = _client()
+    from ..llm import get_provider
+    provider = get_provider()
     spec_json = json.dumps(asdict(spec), indent=2, default=str)
     attempts = []
     code = ""
@@ -158,20 +149,15 @@ def generate_signal_code(
 
     prompt = CODEGEN_PROMPT.format(spec_json=spec_json)
     for i in range(max_retries):
-        msg = client.messages.create(
-            model=CODEGEN_MODEL,
-            max_tokens=1500,
-            temperature=0.0,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        code = msg.content[0].text.strip()
+        resp = provider.complete(prompt, model="sonnet", max_tokens=1500, temperature=0.0)
+        code = resp.text.strip()
         if code.startswith("```"):
             code = code.split("```", 2)[1]
             if code.startswith("python"):
                 code = code[6:]
             code = code.strip().rstrip("`").strip()
         val = validate_code(code)
-        attempts.append(f"attempt {i+1}: ok={val.ok}, errors={val.errors[:3]}")
+        attempts.append(f"attempt {i+1} ({provider.name}): ok={val.ok}, errors={val.errors[:3]}")
         if val.ok:
             break
         # next iteration: include errors in prompt

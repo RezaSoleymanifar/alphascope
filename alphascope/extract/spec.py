@@ -85,31 +85,13 @@ class SignalSpec:
         return cls(**{k: v for k, v in d.items() if k in cls.__annotations__})
 
 
-def _client():
-    try:
-        from anthropic import Anthropic
-    except ImportError as e:
-        raise RuntimeError("install with: uv add anthropic") from e
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        raise RuntimeError("ANTHROPIC_API_KEY env var not set")
-    return Anthropic(api_key=key)
-
-
-def _call_extract(paper_text: str, client, temperature: float, max_tokens: int = 1500) -> dict:
-    msg = client.messages.create(
-        model=SPEC_MODEL,
-        max_tokens=max_tokens,
+def _call_extract(paper_text: str, provider, temperature: float, max_tokens: int = 1500) -> dict:
+    return provider.complete_json(
+        EXTRACT_PROMPT.format(paper_text=paper_text[:25000]),
+        model="sonnet",
         temperature=temperature,
-        messages=[{"role": "user", "content": EXTRACT_PROMPT.format(paper_text=paper_text[:25000])}],
+        max_tokens=max_tokens,
     )
-    text = msg.content[0].text.strip()
-    if text.startswith("```"):
-        text = text.split("```", 2)[1]
-        if text.startswith("json"):
-            text = text[4:]
-        text = text.strip().rstrip("`").strip()
-    return json.loads(text)
 
 
 def _agreement_score(a: SignalSpec, b: SignalSpec) -> float:
@@ -139,14 +121,16 @@ def extract_spec(
     """Extract spec twice with different seeds; return (spec, agreement_score, debug).
 
     Per actor.md: if agreement < `require_agreement`, caller should escalate to human.
+    Uses pluggable LLM provider (see alphascope.llm.factory.get_provider).
     """
-    client = _client()
-    a_dict = _call_extract(paper_text, client, temperature=0.0)
-    b_dict = _call_extract(paper_text, client, temperature=0.4)
+    from ..llm import get_provider
+    provider = get_provider()
+    a_dict = _call_extract(paper_text, provider, temperature=0.0)
+    b_dict = _call_extract(paper_text, provider, temperature=0.4)
     a = SignalSpec.from_json(a_dict)
     b = SignalSpec.from_json(b_dict)
     score = _agreement_score(a, b)
-    return a, score, {"variant_a": asdict(a), "variant_b": asdict(b), "agreement": score}
+    return a, score, {"variant_a": asdict(a), "variant_b": asdict(b), "agreement": score, "provider": provider.name}
 
 
 def extract_spec_offline(paper_text: str) -> SignalSpec:
