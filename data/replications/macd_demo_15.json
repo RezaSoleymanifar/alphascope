@@ -1,0 +1,62 @@
+{
+  "paper_id": "macd_demo_15",
+  "paper_title": "VP-MACD US Equity Indices",
+  "pdf_path": "C:\\Users\\reza\\dev\\alphascope\\data\\papers\\macd_demo_15.pdf",
+  "spec": {
+    "hypothesis": "Replacing the conventional MACD price input with a volume-, volatility-, and intraday-structure-adjusted price series, combined with a sensitivity parameter \u03bb that relaxes the crossover threshold, produces earlier and more selective trading signals with superior risk-adjusted returns on U.S. equity indices.",
+    "formula": "Compute adjusted price P*_t as the N-day rolling sum of (Close_i \u00d7 Volume_i \u00d7 \u03c3_i \u00d7 r_i) divided by the N-day rolling sum of Volume_i, where \u03c3_i = rolling_std(High_i \u2212 Low_i) / Close_i and r_i = (Close_i \u2212 Open_i) / (High_i \u2212 Low_i). Construct VP-MACD_t = EMA12(P*) \u2212 EMA26(P*) and Signal_t = EMA9(VP-MACD). Buy when VP-MACD_{t-1} \u2264 \u03bb\u00b7Signal_{t-1} and VP-MACD_t > \u03bb\u00b7Signal_t; Sell when VP-MACD_{t-1} \u2265 Signal_{t-1} and VP-MACD_t < Signal_t, with \u03bb \u2208 (0.8, 1) calibrated in-sample.",
+    "feature_pseudocode": "sigma = df['high_low_range'].rolling(N).std() / df['close']\nr = (df['close'] - df['open']) / (df['high'] - df['low'])\nP_star = (df['close'] * df['volume'] * sigma * r).rolling(N).sum() / df['volume'].rolling(N).sum()\nvp_macd = P_star.ewm(span=12, adjust=False).mean() - P_star.ewm(span=26, adjust=False).mean()\nsignal_line = vp_macd.ewm(span=9, adjust=False).mean()\nbuy = (vp_macd.shift(1) <= lam * signal_line.shift(1)) & (vp_macd > lam * signal_line)\nsell = (vp_macd.shift(1) >= signal_line.shift(1)) & (vp_macd < signal_line)",
+    "data_required": {
+      "prices": true,
+      "fundamentals": [],
+      "macro": [],
+      "alternative": [
+        "volume"
+      ]
+    },
+    "universe": "sp500",
+    "rebalance_freq": "daily",
+    "horizon_days": null,
+    "expected_sign": "+",
+    "is_long_short": false,
+    "is_cross_sectional": false,
+    "claimed_sharpe": null,
+    "claimed_period": "2023-2026",
+    "claimed_alpha_t_stat": null,
+    "notes": "Strategy applied to equity indices (S&P 500, Nasdaq-100, DJIA), not individual stocks \u2014 not a cross-sectional ranking signal. Sell signal means exit to cash, not short. N (lookback window for P* rolling calculation) is a free parameter \u2014 default not specified in excerpt. \u03bb optimized in-sample over 2018\u20132022; out-of-sample evaluation 2023\u2013Feb 2026. \u03c3_i uses rolling std of (High\u2212Low) range, not a single-day value \u2014 window unspecified. Volume treated as alternative data since conventional MACD uses only price."
+  },
+  "spec_agreement": 0.7142857142857143,
+  "code": "import pandas as pd\nimport numpy as np\n\nN = 20        # rolling window for P* computation\nLAMBDA = 0.9  # crossover sensitivity (in-sample optimum ~0.9)\n\n\ndef signal(prices: pd.DataFrame) -> pd.DataFrame:\n    result = pd.DataFrame(np.nan, index=prices.index, columns=prices.columns)\n\n    for ticker in prices.columns:\n        close = prices[ticker]\n\n        # Approximate daily high-low range as abs(close-to-close change)\n        # (no intraday OHLC available; open\u2248prev_close, high-low\u2248|\u0394close|)\n        hl_approx = close.diff().abs()\n\n        # \u03c3_i = rolling_std(high-low range) / close  (normalized range volatility)\n        sigma = hl_approx.rolling(N, min_periods=2).std() / close.replace(0, np.nan)\n\n        # r_i = (close-open)/(high-low) \u2248 sign(daily return) given above approximation\n        r = np.sign(close.diff())\n\n        # P*_t = \u03a3(close\u00b7volume\u00b7\u03c3\u00b7r) / \u03a3(volume)\n        # volume constant \u2192 cancels; divide by N (rolling sum of 1s)\n        numerator = (close * sigma * r).rolling(N, min_periods=N // 2).sum()\n        P_star = numerator / N\n\n        # VP-MACD and signal line\n        ema12 = P_star.ewm(span=12, adjust=False).mean()\n        ema26 = P_star.ewm(span=26, adjust=False).mean()\n        vp_macd = ema12 - ema26\n        sig_line = vp_macd.ewm(span=9, adjust=False).mean()\n\n        # Continuous bullish score: positive \u2194 VP-MACD above \u03bb\u00b7Signal (buy zone)\n        result[ticker] = vp_macd - LAMBDA * sig_line\n\n    return result",
+  "code_validation": {
+    "ok": true,
+    "errors": [],
+    "warnings": []
+  },
+  "code_attempts": [
+    "attempt 1 (claude_code): ok=True, errors=[]"
+  ],
+  "sandbox_error": null,
+  "backtest": {
+    "sharpe": 0.7920592980815244,
+    "sharpe_oos": 1.0949097769521725,
+    "ann_return": 0.1589116550011529,
+    "ann_vol": 0.18625436413143628,
+    "max_drawdown": -0.36358693949319254,
+    "ic_mean": -0.005970596190306231,
+    "icir": -0.5350596542904315,
+    "dsr": 0.9969189885390969,
+    "replication_score": null
+  },
+  "verdict": "iterate",
+  "verdict_reasoning": [
+    "PASS DSR > 0.95",
+    "FAIL ICIR > 0.3",
+    "PASS OOS Sharpe >= 0.5 * IS Sharpe",
+    "FAIL IC sign correct (positive)"
+  ],
+  "pipeline_status": "done",
+  "pipeline_errors": [
+    "low spec agreement: 0.71 \u2014 flag for review",
+    "spec incomplete (missing required fields)"
+  ]
+}
