@@ -141,21 +141,16 @@ Moderator threshold: 1000
 5. **Authorial disclosure**: if submitter claims to be paper author, must sign w/ email matching paper, flagged as `author_submission`
 6. **Cooldowns**: same paper can't have > 5 simultaneous challenges (forces consolidation)
 
-## AI-driven scraping (the autonomous side)
+## AI-driven scraping (minimal scope — signal over noise)
 
-Independent of user submissions, the AI scraper runs daily:
-1. Search Twitter/X for: paper title + "alphascope.io"
-2. Search Reddit r/algotrading, r/quant for paper title
-3. Watch GitHub issues on alphascope repo
-4. Crawl Substack/blog posts citing the paper
+We DO NOT scrape Twitter/X, Reddit, or Substack. Those channels are 99% noise; mining them costs more in spam-filtering than the signal yields. Per the principle "signal over noise", critics come to us.
 
-For each found mention, LLM:
-- Extracts: critique / endorsement / alternative implementation
-- Auto-creates a `community_signal` record (NOT a submission)
-- Tags it: `signal_type=external_critique`
-- Routes to verification queue
+Active scraping (autonomous, daily):
+1. **GitHub issues** on the alphascope repo — anyone can file an issue to challenge a verdict; LLM auto-classifies it into a Tier-1 community_signal
+2. **Replies on alphascope-published landing pages** (when web UI ships, Phase 4) — comments + "this is wrong" buttons
+3. **Email submissions** to a published address (Phase 4)
 
-Verified `community_signal`s with sufficient agreement become auto-generated challenges (Tier 1 only — never auto-flip verdict).
+That's it. No social-media trawl. Twitter et al. may be revisited in Phase 6+ if and only if a high-precision filter exists.
 
 ## Interaction with critique.md
 

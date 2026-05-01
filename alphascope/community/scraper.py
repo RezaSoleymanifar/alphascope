@@ -1,19 +1,14 @@
-"""Autonomous external-mention scraper.
+"""Autonomous external-mention scraper — MINIMAL SCOPE.
 
-Daily job that searches for AlphaScope replication mentions and external
-critiques across:
-  - Twitter/X (via API or scrape; STUB)
-  - Reddit r/algotrading, r/quant (via PRAW or web scrape; STUB)
-  - GitHub issues on the alphascope repo (via gh API; works today)
-  - Substack / blog posts (via RSS aggregation; STUB)
+Per meta/community.md: we do NOT scrape Twitter / Reddit / Substack. Those
+channels are 99% noise. Critics come to us via:
+  - GitHub issues on the alphascope repo (working today via `gh` CLI)
+  - Web UI comments on published landing pages (Phase 4)
+  - Email submissions (Phase 4)
 
-Each mention becomes a CommunitySignal row in the DB. LLM classifies as:
-  endorsement | critique | alternative | discussion
-
-Verified critiques (after de-duplication + LLM agreement check) get auto-
-promoted to community submissions for human voting.
-
-This is a STUB skeleton in v0.1.0 — flesh out per source in Phase 5.
+The Twitter/Reddit/Substack functions are kept as stubs but explicitly
+disabled — calling them returns []. Revisit only if high-precision filtering
+is built later (Phase 6+).
 """
 from __future__ import annotations
 
@@ -57,17 +52,19 @@ def scrape_github_issues(repo: str = "RezaSoleymanifar/alphascope") -> list[Exte
 
 
 def scrape_twitter(query: str) -> list[ExternalMention]:
-    """STUB: requires Twitter API v2 access (paid tier)."""
+    """DISABLED. Twitter is 99% noise; not worth the spam-filter cost.
+    Re-enable only with high-precision filter (Phase 6+).
+    """
     return []
 
 
 def scrape_reddit(subreddits: list[str], query: str) -> list[ExternalMention]:
-    """STUB: requires PRAW + Reddit OAuth."""
+    """DISABLED. See scrape_twitter rationale."""
     return []
 
 
 def scrape_substack(feed_urls: list[str]) -> list[ExternalMention]:
-    """STUB: parse Substack RSS for paper-title mentions."""
+    """DISABLED. See scrape_twitter rationale."""
     return []
 
 
