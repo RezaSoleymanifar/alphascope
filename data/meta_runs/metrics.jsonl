@@ -1,0 +1,2 @@
+{"timestamp": "2026-05-01T07:26:08.026704", "n_fixtures": 2, "verdict_accuracy": 0.0, "sharpe_in_range_rate": 0.0, "sign_match_rate": 0.5, "ic_pass_rate": 0.0, "n_false_negatives": 0, "n_false_positives": 0, "asymmetric_loss": 0, "f1_ship": 0.0, "f1_iterate": 0.0, "f1_kill": 0.0}
+{"timestamp": "2026-05-01T07:26:45.009564", "n_fixtures": 2, "verdict_accuracy": 0.5, "sharpe_in_range_rate": 0.5, "sign_match_rate": 1.0, "ic_pass_rate": 0.5, "n_false_negatives": 0, "n_false_positives": 0, "asymmetric_loss": 0, "f1_ship": 0.0, "f1_iterate": 0.0, "f1_kill": 1.0}

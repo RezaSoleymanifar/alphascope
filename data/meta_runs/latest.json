@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-05-01T07:26:45.009564",
+  "n_fixtures": 2,
+  "verdict_accuracy": 0.5,
+  "sharpe_in_range_rate": 0.5,
+  "sign_match_rate": 1.0,
+  "ic_pass_rate": 0.5,
+  "confusion_matrix": {
+    "ship": {
+      "iterate": 1
+    },
+    "kill": {
+      "kill": 1
+    }
+  },
+  "f1_per_class": {
+    "ship": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1
+    },
+    "iterate": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    },
+    "kill": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "fixtures": [
+    {
+      "fixture_id": "momentum_jt1993",
+      "expected_verdict": "ship",
+      "actual_verdict": "iterate",
+      "verdict_match": false,
+      "expected_sharpe_range": [
+        0.4,
+        0.9
+      ],
+      "actual_sharpe": 0.07000809793529397,
+      "sharpe_in_range": false,
+      "expected_ic_min": 0.02,
+      "actual_ic_mean": 0.01888533640716228,
+      "ic_pass": false,
+      "expected_sign": "+",
+      "actual_sign": "+",
+      "sign_match": true,
+      "replication_score": 0.10770476605429842,
+      "failure_reasons": [
+        "verdict iterate != expected ship",
+        "Sharpe 0.070 outside expected range (0.4, 0.9)",
+        "IC 0.0189 fails threshold (sign +, min 0.02)"
+      ]
+    },
+    {
+      "fixture_id": "adversarial_random_signal",
+      "expected_verdict": "kill",
+      "actual_verdict": "kill",
+      "verdict_match": true,
+      "expected_sharpe_range": [
+        -0.3,
+        0.3
+      ],
+      "actual_sharpe": -0.21777943245112283,
+      "sharpe_in_range": true,
+      "expected_ic_min": -0.01,
+      "actual_ic_mean": 0.0045861985157578805,
+      "ic_pass": true,
+      "expected_sign": "both",
+      "actual_sign": "+",
+      "sign_match": true,
+      "replication_score": null,
+      "failure_reasons": []
+    }
+  ],
+  "n_false_negatives": 0,
+  "n_false_positives": 0,
+  "asymmetric_loss": 0
+}
