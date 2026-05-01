@@ -67,6 +67,48 @@ def cmd_stats():
     rprint(table)
 
 
+@app.command("replicate")
+def cmd_replicate(
+    paper_id: str = typer.Argument(..., help="paper id (will be db key)"),
+    pdf_url: str = typer.Argument(..., help="direct PDF URL"),
+    title: str = typer.Option(None),
+    use_llm: bool = typer.Option(True, help="use LLM for spec+code (requires ANTHROPIC_API_KEY)"),
+):
+    """End-to-end: download PDF -> extract spec -> generate code -> backtest -> verdict."""
+    from .replicate import replicate
+    from dataclasses import asdict
+    rpt = replicate(paper_id, pdf_url, title=title, use_llm=use_llm)
+    rprint(f"[bold]paper:[/bold] {paper_id}")
+    rprint(f"[bold]status:[/bold] {rpt.pipeline_status}")
+    if rpt.pipeline_errors:
+        rprint(f"[red]errors:[/red] {rpt.pipeline_errors}")
+    if rpt.spec:
+        rprint(f"[bold]spec:[/bold] horizon={rpt.spec.get('horizon_days')}, universe={rpt.spec.get('universe')}, sign={rpt.spec.get('expected_sign')}")
+    if rpt.backtest:
+        rprint(f"[bold]backtest:[/bold] Sharpe={rpt.backtest.get('sharpe'):.3f} IC={rpt.backtest.get('ic_mean'):.4f} ICIR={rpt.backtest.get('icir'):.3f}")
+    if rpt.verdict:
+        color = {"ship": "green", "iterate": "yellow", "kill": "red"}.get(rpt.verdict, "white")
+        rprint(f"[bold {color}]verdict: {rpt.verdict.upper()}[/bold {color}]")
+        for r in rpt.verdict_reasoning:
+            rprint(f"  - {r}")
+
+
+@app.command("evaluate")
+def cmd_evaluate():
+    """Run the meta-learning evaluation loop on all fixtures."""
+    from .meta.eval_loop import evaluate_all_fixtures
+    from .meta.calibration import log_metrics, regression_check
+    from pathlib import Path
+    summary = evaluate_all_fixtures(output_path=Path("data/meta_runs/latest.json"))
+    print(summary.summarize())
+    log_metrics(summary)
+    alerts = regression_check(summary)
+    if alerts:
+        rprint("[red]REGRESSION ALERTS:[/red]")
+        for a in alerts:
+            rprint(f"  ! {a}")
+
+
 @app.command("list")
 def cmd_list(
     source: str = typer.Option(None),
