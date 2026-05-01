@@ -146,19 +146,60 @@ See [docs/architecture.md](./docs/architecture.md) for full layout.
 
 ## Data layer
 
-Methodology (purged CV, DSR, replication scores) is independent of any specific data vendor; the same pipeline runs on whatever price + fundamentals panel you point it at. Practical retail-tier stack:
+Methodology (purged CV, DSR, replication scores) is independent of any specific data vendor; the same pipeline runs on whatever price + fundamentals panel you point it at. Three tiers of access exist, gated by what the user can subscribe to.
+
+### Access tiers
+
+| Tier | Vendor | Cost | Coverage of HXZ-452 anomalies | Who can buy |
+|------|--------|------|-------------------------------|-------------|
+| **Institutional** | WRDS bundle (CRSP + Compustat + I/B/E/S + TAQ + OptionMetrics) | $40-80K/yr | ~95% | Universities, hedge funds, asset managers — **not individuals** |
+| **Retail** | Sharadar Core US (Nasdaq Data Link) | ~$300/mo | ~70% | Anyone |
+| **Free** | OpenAP fixtures + Ken French + HXZ q-factors + FRED + grain prices | $0 | ~25 (price + ADV only) for direct compute; ground-truth scoring on 326 derived returns | Anyone |
+
+**Why CRSP + Compustat are gated:** sold only via institutional contracts (WRDS portal, Wharton). No individual seat exists. Bundled with university affiliation, employer subscription, or a negotiated WRDS Individual Research tier (~$1.5-3K/yr, opaque pricing).
+
+**Sharadar is the indie equivalent**: WRDS-tier methodology (PIT fundamentals + survivorship-free universe + ~150 line items) at 1/100th the cost. History starts 1999 vs CRSP's 1925, and only ~150 of CRSP/Compustat's ~1000 line items — but covers the meat of academic asset pricing.
+
+### Pipeline data sources (current)
 
 | Source | Cost | Role |
 |---|---|---|
-| **Sharadar Core US Fundamentals** (Nasdaq Data Link) | ~$200/mo | Point-in-time fundamentals + adjusted prices + delisting actions, ~3000 US tickers since 1999. The single biggest unlock — solves survivorship-bias and lookahead-bias blockers in one subscription. |
-| **Ken French data library** | free | Fama-French + Carhart benchmark factor return series for alpha computation |
+| **Sharadar Core US Fundamentals** (Nasdaq Data Link) | ~$300/mo | PIT fundamentals + adjusted prices + delisting actions, ~3000 US tickers since 1999. The single biggest unlock — solves survivorship-bias and lookahead-bias blockers in one subscription. **Buy when traction justifies; not required for MVP.** |
+| **OpenAP CrossSection** (Chen + Zimmermann) | free | 326 anomaly return series pre-computed against CRSP+Compustat. Used as ground-truth fixtures for replication scoring — you don't need raw CRSP because you have the derived returns. |
+| **Ken French data library** | free | Fama-French + Carhart benchmark factor return series since 1926, for alpha computation |
 | **HXZ q-factors** (authors' site) | free | q-factor return series for HXZ-style alpha decomposition |
 | **FRED** | free | Macro (rates, inflation, VIX, credit spreads) for regime-conditional analysis |
+| **grain parquet** (companion repo) | free | Daily prices for ~3000 US tickers since 2011, OHLCV |
 | **EODHD** | $79/mo | International universe + intraday — complementary, not core |
 
-Without point-in-time fundamentals + a survivorship-free universe, all replications are biased upward. Until Sharadar (or equivalent) is wired in, the pipeline is restricted to **price-and-ADV-only anomalies** — roughly 25 of HXZ's 452, including 12-1 momentum, idiosyncratic volatility, MAX, betting-against-beta proxies, and long-term reversal. That is a credible Phase-1 scope.
+### Coverage of the academic qfin universe
 
-WRDS-tier data (CRSP, Compustat, I/B/E/S, TAQ, OptionMetrics) is institutional-only and unlocks the remaining ~25% of HXZ that depends on full Compustat-depth line items, analyst forecasts, or microstructure. Out of scope for retail.
+Per `scripts/audit_qfin_universe_coverage.py` (re-runnable): **the addressable half of academic qfin is the cross-sectional US equity asset pricing canon plus pure portfolio-construction methodology — about 50% of published research by volume.**
+
+| Bucket | % of academic qfin output | Coverage with current stack |
+|--------|--------------------------:|-----------------------------|
+| US equity cross-sectional factor research (HXZ / FF / Stambaugh / AQR style) | ~18% | ✅ FULL |
+| ML on US equity characteristics (Gu-Kelly-Xiu, Kelly-Pruitt-Su, Bryzgalova-Pelger-Zhu) | ~5% | ✅ FULL |
+| Pure methodology (portfolio opt, risk estimation, backtesting frameworks) | ~9% | ✅ FULL |
+| Asset pricing / derivatives pricing **theory** (no data needed) | ~5% | ✅ N/A |
+| US equity stat arb / pairs | ~2% | ✅ FULL |
+| PEAD / sentiment indices / country rotation (partial) | ~7% | 🟡 PARTIAL |
+| Multi-asset (Carry, Value+Momentum Everywhere) | ~6% | ❌ blocked — need Bloomberg/Refinitiv |
+| FX, commodities, fixed income | ~16% | ❌ blocked — same |
+| Equity options + vol arb | ~5% | ❌ blocked — need OptionMetrics |
+| Microstructure / HFT | ~3% | ❌ blocked — need TAQ |
+| Alt-data / text / NLP (Lazy Prices, ChatGPT factor, Google attention) | ~10% | ❌ blocked — need news corpus / SEC EDGAR scrape |
+| Crypto factor / on-chain | ~6% | ❌ blocked — cheap to add (free APIs) |
+
+**Positioning is honest:** Alpha Archive replicates the addressable half of academic quant finance — the US equity asset pricing canon, ML applied to it, and portfolio construction methodology. Frontier research (multi-asset, derivatives, microstructure, alt-data) is gated by data licensing and intentionally out of scope.
+
+### Reproducibility convention
+
+Every published replication pins its data vendor + version (academic standard since ~2005). Runtime config:
+
+- `ALPHA_ARCHIVE_DATA_VENDOR=sharadar|wrds|grain` selects the source
+- Each `ReplicationReport` records the vendor + pull-date + filter set used
+- LLM-generated code is forbidden from fetching arbitrary external APIs at runtime — only the configured vendor's local cache is readable
 
 ## Companion repo: portfolio-management
 
