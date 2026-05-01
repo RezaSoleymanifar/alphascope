@@ -101,6 +101,28 @@ def cmd_replicate(
             rprint(f"  - {r}")
 
 
+@app.command("install-fixtures")
+def cmd_install_fixtures(
+    source: str = typer.Argument("openap", help="fixture source: openap"),
+    force: bool = typer.Option(False, help="re-download source data"),
+):
+    """Bootstrap fixture set from external ground-truth corpus.
+
+    `openap` = Open Source Asset Pricing project (Chen + Zimmermann),
+    326 documented anomalies with peer-reviewed verdicts. Free.
+    """
+    if source != "openap":
+        rprint(f"[red]unknown source: {source}[/red]")
+        raise typer.Exit(1)
+    from .fixtures_openap import install_openap_fixtures, stats
+    s = stats()
+    rprint(f"[bold]OpenAP corpus:[/bold] {s['total']} documented anomalies")
+    rprint(f"  by verdict: {s['by_verdict']}")
+    rprint(f"  by sign:    {s['by_sign']}")
+    added = install_openap_fixtures(force_download=force)
+    rprint(f"[green]registered {added} new fixtures into the meta-loop[/green]")
+
+
 @app.command("evaluate")
 def cmd_evaluate():
     """Run the meta-learning evaluation loop on all fixtures."""

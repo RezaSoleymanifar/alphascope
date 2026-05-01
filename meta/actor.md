@@ -133,6 +133,7 @@ Format: `YYYY-MM-DD | <fixture_id or run_id> | <observation> | <action taken in 
 
 ```
 2026-05-01 | momentum_jt1993 | Full-window Sharpe 0.07 vs claimed 0.7 — clear post-pub decay. Pipeline correctly avoided FN by verdict=iterate. Validates asymmetric verdict rules. | No actor changes; reaffirms ship_oos_ratio guardrail.
+2026-05-01 | bootstrap        | Imported 326 fixtures from Open Source Asset Pricing (Chen+Zimmermann). 165 ship / 47 iterate / 114 kill labels. Fixture set grew 6 -> 332. | No actor changes; meta-loop F1 now statistically meaningful.
 ```
 
 ## Evolution policy for THIS file
