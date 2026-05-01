@@ -32,6 +32,22 @@ Each paper gets a public landing page with:
 - Replication score: gap between paper claims and live result
 - Comments / community discussion
 
+## Relationship to Hou-Xue-Zhang 2018 ("Replicating Anomalies")
+
+HXZ 2018 is the gold-standard one-shot replication study: 452 published anomalies, all run through one consistent pipeline, with a multiple-testing-corrected significance bar (t > 2.78). Roughly 64% of the published "discoveries" failed to replicate. It permanently moved the goalposts for credible factor research and is the closest existing analogue to what Alpha Archive aims to be.
+
+Alpha Archive is the **autonomous, perpetually-running version of HXZ**:
+
+| | HXZ 2018 | Alpha Archive |
+|---|---|---|
+| Scope | 452 finished papers, one-shot | Every new paper as it drops, continuous |
+| Pipeline | Manual, single team, single dataset | Automated LLM extraction + standardized backtest |
+| Significance bar | Single threshold across the 452 | Cumulative DSR adjustment across all papers ever tested |
+| Result lifecycle | Frozen at publication | Live re-runs track alpha decay over time |
+| Code / data | Closed source-of-truth | Open code, open results, crowdsourced verification |
+
+The methodology HXZ established — point-in-time data, survivorship-free universe, purged CV, multiple-testing correction — is the methodology spec here. See [docs/methodology.md](./docs/methodology.md). After HXZ, no credible factor paper can skip these checks; Alpha Archive enforces them automatically and at scale.
+
 ## Differentiators
 
 | | AlphaArchitect | Quantpedia | Alpha Archive |
@@ -59,12 +75,14 @@ Like Wikipedia for trading signals, with executable code + live backtests + bipa
 ## Quick start (developer)
 
 ```bash
-git clone https://github.com/<you>/alpha-archive
+git clone https://github.com/RezaSoleymanifar/alpha-archive
 cd alpha-archive
-uv sync                         # Python env
-uv run alpha-archive poll arxiv    # fetch new papers
-uv run alpha-archive triage        # LLM triage queue
-uv run alpha-archive eval <paper-id>
+uv sync                                                # Python env
+uv run alpha-archive init                              # SQLite schema
+uv run alpha-archive install-fixtures                  # 326 ground-truth fixtures from OpenAP
+uv run alpha-archive poll arxiv                        # fetch new papers
+uv run alpha-archive triage --limit 20                 # LLM triage (free via Claude Code CLI)
+uv run alpha-archive replicate <paper_id> <pdf_url>    # end-to-end paper → verdict
 ```
 
 ## Architecture
@@ -81,6 +99,39 @@ Manual submission   ─┘                              ├─ Decay analysis   
 
 See [docs/architecture.md](./docs/architecture.md) for full layout.
 
+## Data layer
+
+Methodology (purged CV, DSR, replication scores) is independent of any specific data vendor; the same pipeline runs on whatever price + fundamentals panel you point it at. Practical retail-tier stack:
+
+| Source | Cost | Role |
+|---|---|---|
+| **Sharadar Core US Fundamentals** (Nasdaq Data Link) | ~$200/mo | Point-in-time fundamentals + adjusted prices + delisting actions, ~3000 US tickers since 1999. The single biggest unlock — solves survivorship-bias and lookahead-bias blockers in one subscription. |
+| **Ken French data library** | free | Fama-French + Carhart benchmark factor return series for alpha computation |
+| **HXZ q-factors** (authors' site) | free | q-factor return series for HXZ-style alpha decomposition |
+| **FRED** | free | Macro (rates, inflation, VIX, credit spreads) for regime-conditional analysis |
+| **EODHD** | $79/mo | International universe + intraday — complementary, not core |
+
+Without point-in-time fundamentals + a survivorship-free universe, all replications are biased upward. Until Sharadar (or equivalent) is wired in, the pipeline is restricted to **price-and-ADV-only anomalies** — roughly 25 of HXZ's 452, including 12-1 momentum, idiosyncratic volatility, MAX, betting-against-beta proxies, and long-term reversal. That is a credible Phase-1 scope.
+
+WRDS-tier data (CRSP, Compustat, I/B/E/S, TAQ, OptionMetrics) is institutional-only and unlocks the remaining ~25% of HXZ that depends on full Compustat-depth line items, analyst forecasts, or microstructure. Out of scope for retail.
+
+## Companion repo: portfolio-management
+
+Alpha Archive answers "does this signal work?" — it produces a catalog of validated signals with replication scores and decay curves. The companion repo [`portfolio-management`](../portfolio-management) answers the next question: "given working signals, how do I build a portfolio from them?"
+
+```
+alpha-archive (this repo)              portfolio-management
+──────────────────────────             ──────────────────────────
+INPUT:  papers (arxiv/SSRN/NBER)       INPUT:  validated signals
+OUTPUT: validated signals,             OUTPUT: weight vector w
+        replication scores,                    (which stocks, how much $)
+        decay curves
+JOB:    Does this signal work?         JOB:    Given working signals,
+                                               build a portfolio.
+```
+
+The optimizer in `portfolio-management` (long-only retail convex QP with sector-balance constraints, six factor presets, plus an HRP alternative) consumes the signals validated here. Together they form an end-to-end pipeline: paper → signal validation → portfolio allocation.
+
 ## Methodology
 
 Every paper goes through the same pipeline. No cherry-picking, no parameter tuning per paper. Documented in [docs/methodology.md](./docs/methodology.md).
@@ -95,12 +146,14 @@ Key principles:
 ## Roadmap
 
 See [docs/roadmap.md](./docs/roadmap.md). Phased:
-- **Phase 0**: Repo skeleton, schema, source pollers (you are here)
-- **Phase 1**: LLM triage + spec extraction working on arXiv
-- **Phase 2**: Backtest engine producing IC reports
-- **Phase 3**: Web UI MVP (Streamlit)
-- **Phase 4**: Public launch on alpha-archive.io
-- **Phase 5**: Crowdsourced submissions + community
+- **Phase 0** ✅ Repo skeleton, SQLite schema, six source pollers (arXiv, SSRN, NBER, AlphaArchitect, AQR, Two Sigma), Typer CLI
+- **Phase 0.5** ✅ **Fixture calibration** — 326 ground-truth fixtures bootstrapped from Open Source Asset Pricing (Chen+Zimmermann), plus hand-coded canonical anomalies (12-1 momentum). Meta-loop now F1-meaningful.
+- **Phase 1** ✅ LLM triage + spec extraction + code generation, end-to-end demo on real arXiv paper (VP-MACD). Pluggable provider abstraction: `claude_code` (free via Max plan) | `anthropic` (API key) | `offline` (no LLM)
+- **Phase 2** 🟡 Backtest engine: purged CV, DSR, IC report, asymmetric verdict assignment shipped. Cost model + regime splits in progress.
+- **Phase 2.5** 🟡 **Meta-learning loop** — actor/critic/learn governance scaffolded under `meta/`; community layer (Tier-1 GitHub-issue-based crowdsourcing, Community-Notes-style bipartisan agreement) scaffolded under `alpha_archive/community/`
+- **Phase 3** ⏳ Web UI MVP (Streamlit)
+- **Phase 4** ⏳ Public launch on alpha-archive.io
+- **Phase 5** ⏳ Crowdsourced submissions + bipartisan verification at scale
 
 ## Why this could become popular
 
@@ -113,7 +166,7 @@ See [docs/roadmap.md](./docs/roadmap.md). Phased:
 
 ## Status
 
-**Phase 0** — repo scaffolding. Not production. Not financial advice. Use at your own risk.
+**Phase 2** — pipeline operational end-to-end on real papers (proof-of-life: see [docs/demo_run.md](./docs/demo_run.md)). Meta-learning + community layers scaffolded. Pre-Streamlit. Not production. Not financial advice. Use at your own risk.
 
 ## License
 
@@ -121,4 +174,4 @@ MIT (planned). Methodology + extracted code is open. Original papers belong to t
 
 ## Author
 
-Reza Soleymanifar · PhD UIUC · ML Engineer · [profile](https://github.com/<you>)
+Reza Soleymanifar · PhD UIUC · ML Engineer · [profile](https://github.com/RezaSoleymanifar)
