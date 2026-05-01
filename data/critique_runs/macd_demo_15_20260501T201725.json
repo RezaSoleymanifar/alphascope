@@ -1,0 +1,19 @@
+{
+  "paper_id": "macd_demo_15",
+  "run_ts": "2026-05-01T20:17:25.354388+00:00",
+  "north_star_alignment_score": 0,
+  "asymmetric_loss": 0.0,
+  "findings": [
+    {
+      "severity": "HIGH",
+      "category": "process",
+      "claim": "Critic LLM call failed: JSONDecodeError",
+      "evidence": "Expecting value: line 1 column 1 (char 0)",
+      "proposed_actor_change": ""
+    }
+  ],
+  "anti_patterns_triggered": [],
+  "open_questions": [
+    "LLM provider unavailable; rerun critic when fixed."
+  ]
+}

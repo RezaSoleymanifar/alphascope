@@ -1,0 +1,56 @@
+{
+  "paper_id": "macd_demo_15",
+  "run_ts": "2026-05-01T20:20:21.555320+00:00",
+  "north_star_alignment_score": 50,
+  "asymmetric_loss": 0.0,
+  "findings": [
+    {
+      "severity": "HIGH",
+      "id": "F1",
+      "title": "IC gates applied to non-cross-sectional market-timing strategy",
+      "evidence": "spec.is_cross_sectional=false; universe=equity indices (3 instruments). IC rank-correlation is a cross-sectional metric \u2014 it requires a panel of securities ranked by signal. Applying it to a single-instrument timing signal produces an undefined / noise quantity. ICIR=-0.535 and verdict_reasoning FAIL 'IC sign correct (positive)' are artifacts of wrong evaluation methodology, not evidence of a bad signal. The iterate verdict is correct by accident but for the wrong reason.",
+      "proposed_actor_change": "actor.md stage VERDICT: branch on is_cross_sectional. When false, skip IC/ICIR gates entirely; substitute time-series gates: hit_rate >= 0.52 AND avg_win/avg_loss >= 1.0 AND calmar_ratio >= 0.3. Remove 'IC sign correct' from verdict_reasoning for non-cross-sectional strategies."
+    },
+    {
+      "severity": "HIGH",
+      "id": "F2",
+      "title": "Volume silently dropped from P* formula despite being required alt data",
+      "evidence": "spec.data_required.alternative=['volume']. Code comment: 'volume constant \u2192 cancels; divide by N (rolling sum of 1s)'. The paper's formula P*_t = \u03a3(close\u00b7volume\u00b7\u03c3\u00b7r) / \u03a3(volume) explicitly volume-weights each bar. Without real volume, P* collapses to a close/\u03c3/r momentum term with no volume information. spec_agreement=0.71 already flagged this deviation but the pipeline ran anyway.",
+      "proposed_actor_change": "actor.md stage IMPLEMENT: when data_required.alternative includes 'volume', assert volume column present in prices DataFrame before codegen. If absent, abort with pipeline_error='volume_required_unavailable' rather than silently approximating. Log volume_used: bool in backtest metadata."
+    },
+    {
+      "severity": "HIGH",
+      "id": "F3",
+      "title": "OOS Sharpe exceeds IS Sharpe by 38%",
+      "evidence": "backtest.sharpe=0.792 (IS), backtest.sharpe_oos=1.095 (OOS). OOS > IS by factor 1.38. Possible causes: (1) \u03bb=0.9 optimized in-sample on same IS window (parameter leakage), (2) IS/OOS split boundary contamination, (3) OOS period 2023-2026 coincidentally favorable for trend-following on equity indices (strong bull). None of these are ruled out by the current pipeline output.",
+      "proposed_actor_change": "actor.md stage BACKTEST: add check \u2014 if sharpe_oos > sharpe_is * 1.2, append 'oos_outperforms_is' to pipeline_errors and set verdict to iterate regardless of gate results pending human review. Document suspected cause in verdict_reasoning."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "F4",
+      "title": "replication_score=null makes asymmetric loss uncomputable",
+      "evidence": "backtest.replication_score=null; spec.claimed_sharpe=null. Pipeline drops the |replication_score-0.6| term from L silently. Loss reported as 0.000, which is meaningless. Critic cannot trend this metric across runs.",
+      "proposed_actor_change": "actor.md stage VERDICT: when claimed_sharpe=null, set replication_score='no_baseline' (not null) and explicitly log 'asymmetric_loss_replication_term: dropped_no_baseline'. Use null only for computation errors, not for expected-missing data."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "F5",
+      "title": "Three stacked OHLC approximations compound formula deviation",
+      "evidence": "Code stacks: (1) HL range \u2248 |\u0394close| instead of High-Low, (2) open \u2248 prev_close, (3) r_i = sign(daily return) instead of (close-open)/(high-low). Each introduces independent error; combined they produce a P* qualitatively different from the paper's. This is the primary driver of spec_agreement=0.71.",
+      "proposed_actor_change": "actor.md stage IMPLEMENT: when formula fields include open, high, low explicitly, require OHLCV data. If only close available, lower spec_agreement by 0.15 per missing field (open, high, low each = -0.15) and append pipeline_error 'ohlc_required_approximated'."
+    },
+    {
+      "severity": "LOW",
+      "id": "F6",
+      "title": "Pipeline continued to backtest despite flagged spec_agreement < 0.75",
+      "evidence": "pipeline_errors=['low spec agreement: 0.71 \u2014 flag for review', 'spec incomplete (missing required fields)']. Pipeline produced verdict regardless. The flags had no gate effect.",
+      "proposed_actor_change": "actor.md stage TRIAGE\u2192IMPLEMENT gate: when spec_agreement < 0.75, require explicit human_approved=true field before proceeding to backtest. Auto-continue threshold = 0.75."
+    }
+  ],
+  "anti_patterns_triggered": [],
+  "open_questions": [
+    "Was \u03bb=0.9 optimized on the same IS window used for the IS Sharpe calculation? If yes, IS Sharpe is inflated and the OOS outperformance anomaly (F3) is explained by in-sample overfitting rather than genuine alpha.",
+    "Does the backtest infrastructure prices DataFrame carry OHLCV columns? If OHLCV available, code should be regenerated with real intraday fields before final verdict \u2014 current P* approximation may not represent the paper at all.",
+    "Is the iterate verdict correct here or is this a suspected FN? Negative IC is noise for a market-timing strategy (F1); with correct time-series gates the strategy may clear ship thresholds given DSR=0.997 and OOS Sharpe=1.09."
+  ]
+}

@@ -82,8 +82,53 @@ uv run alpha-archive init                              # SQLite schema
 uv run alpha-archive install-fixtures                  # 326 ground-truth fixtures from OpenAP
 uv run alpha-archive poll arxiv                        # fetch new papers
 uv run alpha-archive triage --limit 20                 # LLM triage (free via Claude Code CLI)
-uv run alpha-archive replicate <paper_id> <pdf_url>    # end-to-end paper → verdict
+uv run alpha-archive replicate <paper_id> <pdf_url>    # end-to-end paper -> verdict
 ```
+
+## Autonomous self-improvement loop
+
+Per the meta governance in `meta/north_star.md` + `meta/actor.md` + `meta/critique.md` + `meta/learn.md`, the platform runs an end-to-end self-improvement cycle. One iteration:
+
+```
+poll -> triage -> replicate-on-tradable -> CRITIC grades reports
+                                       -> ACTOR proposes calibration tweaks
+                                       -> metrics logged to data/meta_runs/metrics.jsonl
+              (weekly)              -> LEARN aggregator analyzes attribution -> proposes critique.md edits
+```
+
+**Manual run (any cadence):**
+```bash
+uv run alpha-archive loop                    # one full iteration; proposals only (no auto-apply)
+uv run alpha-archive loop --learn            # also run weekly LEARN aggregator
+uv run alpha-archive loop --auto-apply       # apply actor proposals to meta/actor.md (still requires human commit)
+```
+
+**Per-stage CLI (for inspection / debugging):**
+```bash
+uv run alpha-archive critique                # grade all ReplicationReports -> data/critique_runs/
+uv run alpha-archive critique --paper-id X   # grade just one
+uv run alpha-archive actor-propose           # propose actor.md calibration changes
+uv run alpha-archive learn                   # run LEARN attribution -> data/learn_runs/
+```
+
+### Deployment options
+
+| Mode | When to use | Cost | LLM provider |
+|------|-------------|------|--------------|
+| **Local cron / Task Scheduler** | Solo dev, full Claude Code Max plan available | $0 | `claude_code` (CLI Max plan, free) |
+| **GitHub Actions** (`.github/workflows/autonomous_loop.yml`) | Hands-off, want public artifact trail | ~$0.04/paper | `anthropic` (requires `ANTHROPIC_API_KEY` secret) |
+
+**GitHub Actions cron is intentionally commented-out by default.** To enable scheduled runs:
+1. Add `ANTHROPIC_API_KEY` to repo Settings -> Secrets and variables -> Actions
+2. Uncomment the `schedule:` block in `.github/workflows/autonomous_loop.yml`
+3. Push the change
+
+Until enabled, the workflow remains manually-triggered via the Actions tab ("Run workflow" button on `autonomous-loop`).
+
+**Hard safety per `meta/learn.md`:**
+- Actor self-edits emit a markdown PROPOSAL by default; `--auto-apply` is opt-in.
+- Critique.md changes (LEARN's domain) ALWAYS go through human-reviewed PRs — no auto-merge ever.
+- Loop never modifies `meta/north_star.md` or `meta/learn.md` (immutable per spec).
 
 ## Architecture
 
@@ -101,19 +146,60 @@ See [docs/architecture.md](./docs/architecture.md) for full layout.
 
 ## Data layer
 
-Methodology (purged CV, DSR, replication scores) is independent of any specific data vendor; the same pipeline runs on whatever price + fundamentals panel you point it at. Practical retail-tier stack:
+Methodology (purged CV, DSR, replication scores) is independent of any specific data vendor; the same pipeline runs on whatever price + fundamentals panel you point it at. Three tiers of access exist, gated by what the user can subscribe to.
+
+### Access tiers
+
+| Tier | Vendor | Cost | Coverage of HXZ-452 anomalies | Who can buy |
+|------|--------|------|-------------------------------|-------------|
+| **Institutional** | WRDS bundle (CRSP + Compustat + I/B/E/S + TAQ + OptionMetrics) | $40-80K/yr | ~95% | Universities, hedge funds, asset managers — **not individuals** |
+| **Retail** | Sharadar Core US (Nasdaq Data Link) | ~$300/mo | ~70% | Anyone |
+| **Free** | OpenAP fixtures + Ken French + HXZ q-factors + FRED + grain prices | $0 | ~25 (price + ADV only) for direct compute; ground-truth scoring on 326 derived returns | Anyone |
+
+**Why CRSP + Compustat are gated:** sold only via institutional contracts (WRDS portal, Wharton). No individual seat exists. Bundled with university affiliation, employer subscription, or a negotiated WRDS Individual Research tier (~$1.5-3K/yr, opaque pricing).
+
+**Sharadar is the indie equivalent**: WRDS-tier methodology (PIT fundamentals + survivorship-free universe + ~150 line items) at 1/100th the cost. History starts 1999 vs CRSP's 1925, and only ~150 of CRSP/Compustat's ~1000 line items — but covers the meat of academic asset pricing.
+
+### Pipeline data sources (current)
 
 | Source | Cost | Role |
 |---|---|---|
-| **Sharadar Core US Fundamentals** (Nasdaq Data Link) | ~$200/mo | Point-in-time fundamentals + adjusted prices + delisting actions, ~3000 US tickers since 1999. The single biggest unlock — solves survivorship-bias and lookahead-bias blockers in one subscription. |
-| **Ken French data library** | free | Fama-French + Carhart benchmark factor return series for alpha computation |
+| **Sharadar Core US Fundamentals** (Nasdaq Data Link) | ~$300/mo | PIT fundamentals + adjusted prices + delisting actions, ~3000 US tickers since 1999. The single biggest unlock — solves survivorship-bias and lookahead-bias blockers in one subscription. **Buy when traction justifies; not required for MVP.** |
+| **OpenAP CrossSection** (Chen + Zimmermann) | free | 326 anomaly return series pre-computed against CRSP+Compustat. Used as ground-truth fixtures for replication scoring — you don't need raw CRSP because you have the derived returns. |
+| **Ken French data library** | free | Fama-French + Carhart benchmark factor return series since 1926, for alpha computation |
 | **HXZ q-factors** (authors' site) | free | q-factor return series for HXZ-style alpha decomposition |
 | **FRED** | free | Macro (rates, inflation, VIX, credit spreads) for regime-conditional analysis |
+| **grain parquet** (companion repo) | free | Daily prices for ~3000 US tickers since 2011, OHLCV |
 | **EODHD** | $79/mo | International universe + intraday — complementary, not core |
 
-Without point-in-time fundamentals + a survivorship-free universe, all replications are biased upward. Until Sharadar (or equivalent) is wired in, the pipeline is restricted to **price-and-ADV-only anomalies** — roughly 25 of HXZ's 452, including 12-1 momentum, idiosyncratic volatility, MAX, betting-against-beta proxies, and long-term reversal. That is a credible Phase-1 scope.
+### Coverage of the academic qfin universe
 
-WRDS-tier data (CRSP, Compustat, I/B/E/S, TAQ, OptionMetrics) is institutional-only and unlocks the remaining ~25% of HXZ that depends on full Compustat-depth line items, analyst forecasts, or microstructure. Out of scope for retail.
+Per `scripts/audit_qfin_universe_coverage.py` (re-runnable): **the addressable half of academic qfin is the cross-sectional US equity asset pricing canon plus pure portfolio-construction methodology — about 50% of published research by volume.**
+
+| Bucket | % of academic qfin output | Coverage with current stack |
+|--------|--------------------------:|-----------------------------|
+| US equity cross-sectional factor research (HXZ / FF / Stambaugh / AQR style) | ~18% | ✅ FULL |
+| ML on US equity characteristics (Gu-Kelly-Xiu, Kelly-Pruitt-Su, Bryzgalova-Pelger-Zhu) | ~5% | ✅ FULL |
+| Pure methodology (portfolio opt, risk estimation, backtesting frameworks) | ~9% | ✅ FULL |
+| Asset pricing / derivatives pricing **theory** (no data needed) | ~5% | ✅ N/A |
+| US equity stat arb / pairs | ~2% | ✅ FULL |
+| PEAD / sentiment indices / country rotation (partial) | ~7% | 🟡 PARTIAL |
+| Multi-asset (Carry, Value+Momentum Everywhere) | ~6% | ❌ blocked — need Bloomberg/Refinitiv |
+| FX, commodities, fixed income | ~16% | ❌ blocked — same |
+| Equity options + vol arb | ~5% | ❌ blocked — need OptionMetrics |
+| Microstructure / HFT | ~3% | ❌ blocked — need TAQ |
+| Alt-data / text / NLP (Lazy Prices, ChatGPT factor, Google attention) | ~10% | ❌ blocked — need news corpus / SEC EDGAR scrape |
+| Crypto factor / on-chain | ~6% | ❌ blocked — cheap to add (free APIs) |
+
+**Positioning is honest:** Alpha Archive replicates the addressable half of academic quant finance — the US equity asset pricing canon, ML applied to it, and portfolio construction methodology. Frontier research (multi-asset, derivatives, microstructure, alt-data) is gated by data licensing and intentionally out of scope.
+
+### Reproducibility convention
+
+Every published replication pins its data vendor + version (academic standard since ~2005). Runtime config:
+
+- `ALPHA_ARCHIVE_DATA_VENDOR=sharadar|wrds|grain` selects the source
+- Each `ReplicationReport` records the vendor + pull-date + filter set used
+- LLM-generated code is forbidden from fetching arbitrary external APIs at runtime — only the configured vendor's local cache is readable
 
 ## Companion repo: portfolio-management
 
